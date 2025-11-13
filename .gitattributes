@@ -1,0 +1,29 @@
+# Handle line endings automatically based on file type
+# This ensures text files are normalized to LF in the repository
+* text=auto
+
+#
+# Enforce LF (Unix/Linux) line endings for all common text files
+# This overrides any local Git 'core.autocrlf' setting
+#
+*.py        text eol=lf
+*.txt       text eol=lf
+*.json      text eol=lf
+*.csv       text eol=lf
+*.sh        text eol=lf
+*.md        text eol=lf
+
+#
+# CHTC / SWAT+ specific files
+#
+*.cal       text eol=lf
+*.sub       text eol=lf
+*.dag       text eol=lf
+
+#
+# Git/IDE specific files
+#
+*.gitignore     text eol=lf
+*.gitattributes text eol=lf
+*.xml       text eol=lf
+*.yml       text eol=lf

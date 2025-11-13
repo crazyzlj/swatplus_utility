@@ -1,0 +1,33 @@
+# controller.sub
+# Submit this single job to run the controller.py
+
+universe   = vanilla
+executable = /opt/conda/envs/pyswatplus_util/bin/python3
+# Put controller.py in the same folder with this file.
+arguments  = controller.py
+# Do not test the "executable" in the login point
+transfer_executable = false
+
+# Use Apptainer to run our program
+# container_image command will automatically transfer .sif file from /staging to execution point,
+# and run '<executable> <arguments>' within the container
+container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.1.sif
+
+# Transfer files required by this job:
+transfer_input_files = controller.py, TxtInOut.tar.gz, run_and_calc.sh
+
+environment = "CONDOR_CONFIG=/etc/condor/condor_config"
+singularity_bind_path = /etc/condor
+
+# This job requires quite small resources,
+#  only pay attention to request_disk to store outputs of sub-jobs
+request_cpus   = 1
+request_memory = 512 MB
+request_disk   = 1 GB
+
+# Logs of this controller job
+log    = controller.log
+output = controller.out
+error  = controller.err
+
+queue 1

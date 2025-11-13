@@ -1,0 +1,29 @@
+# controller_job.sub
+# This job is submitted once, using controller.py to generate parameters and worker_jobs.dag
+
+universe   = vanilla
+executable = /opt/conda/envs/pyswatplus_util/bin/python3
+# Put controller.py in the same folder with this file.
+arguments  = controller.py
+# Do not test the "executable" in the login point
+transfer_executable = false
+
+# Use Apptainer to run our program
+# container_image command will automatically transfer .sif file from /staging to execution point,
+# and run '<executable> <arguments>' within the container
+container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.2.sif
+
+transfer_input_files = controller.py
+
+# Transfer multi_runs folder and dag
+transfer_output_files = worker_jobs.dag, multi_runs
+
+request_cpus   = 1
+request_memory = 256 MB
+request_disk   = 2 GB
+
+log    = controller_std/controller.log
+output = controller_std/controller.out
+error  = controller_std/controller.err
+
+queue 1

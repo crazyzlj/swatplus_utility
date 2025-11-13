@@ -1,0 +1,33 @@
+# test_swat.sub
+# Submit a single SWAT+ simulation job based on Apptainer
+
+universe   = vanilla
+# The executable will be automatically transferred to execution point.
+executable = run_swatplus.sh
+
+# Use Apptainer to run our program
+# container_image command will automatically transfer .sif file from /staging to execution point,
+# and run 'executable' within the container
+container_image = osdf:///chtc/staging/lzhu267/swatplus_61.0.2.11.sif
+
+# Transfer input data
+transfer_input_files = TxtInOut.tar.gz
+
+# Specify output files we want to transfer back
+# HTCondor will find these files in the root path of the sandbox
+transfer_output_files = TxtInOut/basin_wb_day.txt, TxtInOut/channel_sd_day.txt, TxtInOut/channel_sd_mon.txt
+
+# Computing resources
+request_cpus   = 1
+request_memory = 1GB
+request_disk   = 2GB
+
+requirements = (HasCHTCStaging == true)
+
+# Log files
+log    = swatplus_test.log
+output = swatplus_test.out
+error  = swatplus_test.err
+
+# Submit job once
+queue 1

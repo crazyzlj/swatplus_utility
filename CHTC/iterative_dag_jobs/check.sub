@@ -1,0 +1,30 @@
+# check.sub
+# Runs the check.py script
+
+universe   = vanilla
+
+executable = /opt/conda/envs/pyswatplus_util/bin/python3
+arguments  = check.py
+transfer_executable = false
+container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.2.sif
+
+# Input needed (including the results from the workers)
+transfer_input_files = check.py, iteration.state, all_results.csv, multi_runs
+
+# Critical output for the POST script
+transfer_output_files = continue_signal.txt, all_results.csv
+
+# Use this to ensure the updated all_results.csv is also transferred back
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT_OR_EVICT
+
+request_cpus   = 1
+request_memory = 512 MB
+request_disk   = 1 GB
+
+# Log using the DAG Node name (GATHER_CHECK_CONTINUE)
+log    = dag_logs/check_$(Node).log
+output = dag_logs/check_$(Node).out
+error  = dag_logs/check_$(Node).err
+
+queue 1

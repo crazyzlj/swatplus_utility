@@ -1,0 +1,21 @@
+# worker.sub
+# template file, invoked by DAGMan
+
+universe   = vanilla
+executable = run_and_calc.sh
+
+container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.2.sif
+
+transfer_input_files = $(ParamFile), TxtInOut.tar.gz, run_and_calc.sh
+transfer_output_files = efficiency.txt
+transfer_output_remaps = "efficiency.txt = $(RunDir)/efficiency.txt"
+
+request_cpus   = 1
+request_memory = 256 MB
+request_disk   = 1 GB
+
+log = $(RunDir)/job.log
+output = $(RunDir)/job.out
+error = $(RunDir)/job.err
+
+# queue # commented out 'queue'

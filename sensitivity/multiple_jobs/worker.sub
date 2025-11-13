@@ -1,0 +1,22 @@
+# worker.sub
+# template file, invoked by DAGMan
+
+universe   = vanilla
+executable = run_model_extract_results.sh
+arguments  = $(ParamFile) $(ResultDir)
+
+container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.2.1.sif
+
+preserve_relative_paths = true
+transfer_input_files = $(ParamFile),TxtInOut.tar.gz,observed.tar.gz,run_model_extract_results.sh,__init__.py,sensitivity/worker_runmodel.py,postprocess/read_channel_sd_output.py,postprocess/eval_model_performance_v2.py
+transfer_output_files = $(ResultDir)
+
+request_cpus   = 1
+request_memory = 1 GB
+request_disk   = 6 GB
+
+log = $(ResultDir)/job.log
+output = $(ResultDir)/job.out
+error = $(ResultDir)/job.err
+
+# queue # commented out 'queue'

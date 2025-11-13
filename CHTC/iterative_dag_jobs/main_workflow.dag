@@ -1,0 +1,18 @@
+# main_workflow.dag
+# Main iterative workflow
+
+# --- Step 1: Prepare next generation ---
+JOB PREPARE_NEXT_GEN prepare.sub
+
+# --- Step 2: Run current generation workers ---
+SUBDAG EXTERNAL RUN_CURRENT_GEN worker_jobs_current.dag
+
+# --- Step 3: Gather results and check ---
+JOB GATHER_CHECK_CONTINUE check.sub
+
+# --- Step 4: Control loop ---
+SCRIPT POST GATHER_CHECK_CONTINUE resubmit_if_needed.sh
+
+# --- Dependencies ---
+PARENT PREPARE_NEXT_GEN CHILD RUN_CURRENT_GEN
+PARENT RUN_CURRENT_GEN CHILD GATHER_CHECK_CONTINUE

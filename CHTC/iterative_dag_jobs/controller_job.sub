@@ -1,0 +1,38 @@
+# controller_job.sub 
+# Runs the Python script (prepare or check_continue)
+
+universe   = vanilla
+
+executable = /opt/conda/envs/pyswatplus_util/bin/python3
+arguments  = controller.py $(ScriptArgs)
+transfer_executable = false
+container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.2.sif
+
+# Transfer Python script and files it needs to read/write
+transfer_input_files = controller.py, iteration.state, all_results.csv
+
+# --- KEY REVISION ---
+# Explicitly list ONLY the outputs absolutely essential for the NEXT DAG step.
+# For PREPARE_NEXT_GEN, this is the sub-DAG file and the input directories.
+# For GATHER_CHECK_CONTINUE, there are no *essential* outputs for the *next* DAG step itself 
+# (the POST script reads files already transferred back).
+transfer_output_files = worker_jobs_current.dag, multi_runs, iteration.state, all_results.csv, continue_signal.txt
+
+# Use this to ensure all generated/modified files are transferred back
+# (Includes iteration.state, all_results.csv, continue_signal.txt, 
+#  worker_jobs_gen_N.dag, multi_runs/)
+should_transfer_files = YES
+# Transfer even on failure for debugging
+when_to_transfer_output = ON_EXIT_OR_EVICT
+
+request_cpus   = 1
+request_memory = 512 MB
+# Needs enough space for multiple generations of multi_runs
+request_disk   = 1 GB
+
+# Use different logs per step for easier debugging
+log    = dag_logs/controller.log 
+output = dag_logs/controller.out
+error  = dag_logs/controller.err
+
+queue 1

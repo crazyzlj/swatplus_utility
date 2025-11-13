@@ -1,0 +1,32 @@
+# ctrl_sensitivity_analyze_job.sub
+# This job only need to be submitted once, invoke
+#   ctrl_sensentivity_analyze.py to gather model simulation results and calculate sensitivity indices
+
+universe   = vanilla
+executable = /opt/conda/envs/pyswatplus_util/bin/python3
+# Put controller.py in the same folder with this file.
+arguments  = sensitivity/ctrl_sensitivity_analyze.py
+
+# Do not test the "executable" in the login point
+transfer_executable = false
+
+# Use Apptainer to run our program
+# container_image command will automatically transfer .sif file from /staging to execution point,
+# and run '<executable> <arguments>' within the container
+container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.2.1.sif
+
+preserve_relative_paths = true
+transfer_input_files = multi_runs,__init__.py,sensitivity/ctrl_sensitivity_analyze.py
+
+# Transfer multi_runs folder and dag
+transfer_output_files = multi_runs
+
+request_cpus   = 1
+request_memory = 1 GB
+request_disk   = 80 GB
+
+log    = controller_std/controller.log
+output = controller_std/controller.out
+error  = controller_std/controller.err
+
+queue 1

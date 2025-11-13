@@ -1,0 +1,21 @@
+# Use the following commands in conda shell to config python env for swatplus_utility
+#   cd
+#   conda env create -f environment.yml
+#
+#
+# Latest updated: 10/22/2025
+
+name: pyswatplus_util
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - matplotlib
+  - numpy
+  - pandas
+  #- htcondor
+  - git
+  - pip
+  - pip:
+      - -r requirements.txt
+      - git+https://github.com/swat-model/pySWATPlus.git
