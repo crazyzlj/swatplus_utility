@@ -3,82 +3,160 @@ import shutil
 import time
 import pathlib
 import copy
+import json
 import numpy as np
+from typing import List, Dict, Any, Optional
 from SALib.sample import fast_sampler, morris
 
 import pySWATPlus
 import pySWATPlus.utils as utils
 import pySWATPlus.validators as validators
 
-def parse_parameter_file(filepath: str) -> list[dict]:
+def parse_parameter_file(filepath: str,
+                         spatial_group_data: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Reads a definition file and parses it into a list of dictionaries containing parameters to be considered.
+    读取参数定义文件，并将其解析为包含参数信息的字典列表。
 
-    The file format is assumed to be: name,change_type,lower_bound,upper_bound
-    - Lines starting with '#' (comments) are ignored.
-    - Empty lines are ignored.
+    新功能:
+    - 能够解析 'name|object_type|group_name' 格式的参数名称。
+    - 'object_type' (e.g., 'hru', 'rte') 用作在 'spatial_group_data' 中的一级键。
+    - 'group_name' (e.g., 'down1_agri_allsoil') 用作二级键。
+    - 查找到的 ID 列表 (hru_ids, channel_ids) 会被赋给 'units' 键。
+    - 全局参数 (如 'esco') 的 'units' 键为 None。
 
     Args:
-        filepath (str): The path to the input text file.
+        filepath (str): 输入的 .txt 文件路径。
+        spatial_group_data (dict): 一个字典，包含从 JSON 文件加载的空间分组数据。
+            结构示例:
+            {
+                'hru': {'down1_agri_allsoil': {'hru_ids': [1,2]}, ...},
+                'rte': {'all_headwater': {'channel_ids': [10]}, ...}
+            }
 
     Returns:
-        list[dict]: A list of dictionaries containing parameter information.
-                   e.g.: [{'name': 'esco', 'change_type': 'absval',
-                           'lower_bound': 0.0, 'upper_bound': 1.0}, ...]
+        list[dict]: 参数信息字典的列表。
+            e.g.: [{'name': 'cn2', 'change_type': 'pctchg', ..., 'units': [101, 102]},
+                   {'name': 'esco', 'change_type': 'absval', ..., 'units': None}]
     """
+
     parameters = []
+
+    # --- 关键配置 ---
+    # 此映射表告诉函数在 'hru' 组中查找 'hru_ids' 键，
+    # 在 'rte' 组中查找 'channel_ids' 键。
+    # 您可以根据需要扩展此映射。
+    id_field_map = {
+        'hru': 'hru_ids',
+        'rte': 'channel_ids'
+    }
+    # ------------------
 
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             for line in f:
-                # 1. Strip leading/trailing whitespace (like newlines)
                 line = line.strip()
 
-                # 2. Ignore empty lines or comment lines
                 if not line or line.startswith('#'):
                     continue
 
-                # 3. Split the data
                 try:
                     parts = line.split(',')
+                    if len(parts) != 4:
+                        print(f"警告: 跳过格式错误的行 (需要4个部分): {line}")
+                        continue
 
-                    # Ensure there are exactly 4 parts after splitting
-                    if len(parts) == 4:
-                        # 4. Create the dictionary and perform type conversion
-                        param_dict = {
-                            'name': parts[0].strip(),
-                            'change_type': parts[1].strip(),
-                            'lower_bound': float(parts[2].strip()),  # Convert to float
-                            'upper_bound': float(parts[3].strip())  # Convert to float
-                        }
-                        parameters.append(param_dict)
-                    else:
-                        print(f"Warning: Skipping malformed line: {line}")
+                    raw_name = parts[0].strip()
+                    param_dict = {
+                        'change_type': parts[1].strip(),
+                        'lower_bound': float(parts[2].strip()),
+                        'upper_bound': float(parts[3].strip()),
+                        'units': None  # 默认 'units' 为 None (全局参数)
+                    }
+
+                    # --- 核心扩展逻辑 ---
+                    if '|' in raw_name:
+                        name_parts = raw_name.split('|')
+
+                        # 1. 验证格式
+                        if len(name_parts) != 3:
+                            print(f"警告: 跳过格式错误的参数名 (需要 3 个 '|' 分隔的部分): {line}")
+                            continue
+
+                        param_name = name_parts[0].strip()
+                        object_type = name_parts[1].strip()  # e.g., 'hru'
+                        group_name = name_parts[2].strip()  # e.g., 'down1_agri_allsoil'
+
+                        param_dict['name'] = param_name
+
+                        # 2. 开始查找 ID 列表
+                        try:
+                            # 2.1 检查 object_type 是否在配置中 (e.g., 'hru' in spatial_group_data)
+                            if object_type not in spatial_group_data:
+                                print(f"警告: 在 '{line}' 中, "
+                                      f"对象类型 '{object_type}' 未在 spatial_group_data 中找到。")
+                                continue
+
+                            data_source = spatial_group_data[object_type]
+
+                            # 2.2 检查 group_name 是否在对应的 JSON 数据中 (e.g., 'down1_agri_allsoil' in hru_data)
+                            if group_name not in data_source:
+                                print(f"警告: 在 '{line}' 中, "
+                                      f"组名 '{group_name}' 未在 {object_type} 数据中找到。")
+                                continue
+
+                            group_data = data_source[group_name]
+
+                            # 2.3 检查我们是否知道要查找哪个ID字段 (e.g., 'hru' in id_field_map)
+                            if object_type not in id_field_map:
+                                print(f"警告: 在 '{line}' 中, "
+                                      f"对象类型 '{object_type}' 没有在 id_field_map 中配置。")
+                                continue
+
+                            id_field = id_field_map[object_type]  # 'hru_ids' or 'channel_ids'
+
+                            # 2.4 检查 'hru_ids' 或 'channel_ids' 是否在 JSON 的该条目中
+                            if id_field not in group_data:
+                                print(f"警告: 在 '{line}' 中, "
+                                      f"字段 '{id_field}' 未在组 '{group_name}' 中找到。")
+                                continue
+
+                            # 2.5 成功！获取ID列表
+                            id_list = group_data[id_field]
+                            param_dict['units'] = id_list
+
+                        except Exception as e_lookup:
+                            print(f"警告: 在为行 '{line}' 查找空间单元时出错: {e_lookup}")
+                            continue
+
+                    else:  # 如果没有 '|'
+                        param_dict['name'] = raw_name
+                        # param_dict['units'] 已经是 None, 保持不变
+
+                    parameters.append(param_dict)
+                    # --- 逻辑结束 ---
 
                 except ValueError:
-                    # Handle failures during float() conversion
-                    print(f"Warning: Skipping line with data type error: {line}")
+                    print(f"警告: 跳过数据类型错误的行 (float转换失败): {line}")
                 except Exception as e:
-                    print(f"Warning: Unknown error processing line '{line}': {e}")
+                    print(f"警告: 处理行 '{line}' 时发生未知错误: {e}")
 
     except FileNotFoundError:
-        print(f"Error: File not found: {filepath}")
-        return []  # Return an empty list
+        print(f"错误: 文件未找到: {filepath}")
+        return []
     except Exception as e:
-        print(f"Error: An error occurred while reading the file: {e}")
-        return []  # Return an empty list
+        print(f"错误: 读取文件时发生错误: {e}")
+        return []
 
     return parameters
-
 
 # Sensitivity simulation
 if __name__ == '__main__':
     # Use 'Morris' first when too many parameters are considered, and then use FAST.
-    METHOD = 'morris'
+    METHOD = 'FAST'
     # --- FAST ---
     # Total model runs = N * D, M can be 4 (by default) or 8 and N > 4M^2 (N > 64)
     #   D is the count of considered parameters
-    N_fast = 100  # Must > 4 * M^2, recommend 1024, 2048, ...
+    N_fast = 1024  # Must > 4 * M^2, recommend 1024, 2048, ...
     M_fast = 4
 
     # --- Morris ---
@@ -89,27 +167,45 @@ if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.abspath(__file__))
     # Text file to define multiple parameters to be considered
     #  the format of each parameter MUST be "name,chang_type,lower_bound,upper_bound".
-    # param_def_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\param_defs.txt'
-    param_def_file = script_dir + '/../param_defs_test.txt'
+    # param_def_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\param_defs-fast-2025-11-14.txt'
+    # hru_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\hru_combinations.json'
+    # rte_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\channel_combinations.json'
+    param_def_file = script_dir + '/../param_defs.txt'
+    hru_grp_file = script_dir + '/../hru_combinations.json'
+    rte_grp_file = script_dir + '/../channel_combinations.json'
     # TxtInOut folder
-    tio_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\TxtInOut'
-    # tio_dir = script_dir + '/../TxtInOut'
+    # tio_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\TxtInOut'
+    tio_dir = script_dir + '/../TxtInOut'
     # Actual simulation folder for every model runs
-    # sim_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\testsensitivity2'
     sim_dir_name = 'multi_runs'
     sim_dir_path = script_dir + '/../' + sim_dir_name
 
     tio_dir = pathlib.Path(tio_dir).resolve()
     sim_dir = pathlib.Path(sim_dir_path).resolve()
-    # obs_dir = pathlib.Path(obs_dir).resolve()
+
     if not os.path.exists(sim_dir):
         os.makedirs(sim_dir, exist_ok=True)
 
     # Start time
     start_time = time.time()
 
-    # Submit job of reading parameters definitions, generating samples, and saving to separated files
-    param_def = parse_parameter_file(param_def_file)
+    # read hru and channel group information
+    # 构建 'spatial_group_data' 配置字典
+    #    键 'hru' 和 'rte' 必须与 param_defs.txt 中
+    #    '|' 分隔的第二部分匹配。
+    spatial_data_config = {}
+    hru_grp_data = None
+    if hru_grp_file is not None and os.path.exists(hru_grp_file):
+        with open(hru_grp_file, 'r') as f:
+            loaded_hru_data = json.load(f)
+            spatial_data_config['hru'] = loaded_hru_data
+    rte_grp_data = None
+    if rte_grp_file is not None and os.path.exists(rte_grp_file):
+        with open(rte_grp_file, 'r') as f:
+            loaded_channel_data = json.load(f)
+            spatial_data_config['rte'] = loaded_channel_data
+
+    param_def = parse_parameter_file(param_def_file, spatial_data_config)
 
     # Initialize TxtinoutReader with the simulation directory
     txtinout_reader = pySWATPlus.TxtinoutReader(
@@ -229,5 +325,3 @@ if __name__ == '__main__':
 
     print(f"Successfully generated {num_sim} parameter files and {DAG_FILE_NAME}.")
     print("--- Controller Script Finished ---")
-
-
