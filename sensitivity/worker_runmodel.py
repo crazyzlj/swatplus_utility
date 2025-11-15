@@ -3,7 +3,7 @@ import os
 import sys
 if os.path.abspath(os.path.join(sys.path[0], '..')) not in sys.path:
     sys.path.insert(0, os.path.abspath(os.path.join(sys.path[0], '..')))
-
+import glob
 import shutil
 import time
 import pathlib
@@ -13,6 +13,47 @@ from postprocess.read_channel_sd_output import process_swat_output_memory_effici
 from postprocess.eval_model_performance_v2 import evaluate_performance
 
 import pySWATPlus
+
+
+def delete_files_by_suffix_glob(folder_path: str,
+                                suffix: str,
+                                dry_run: bool = True):
+    if not suffix.startswith('.'):
+        suffix = '.' + suffix
+
+    # 1. 构建搜索模式
+    # 'os.path.join' 会正确处理路径分隔符 (e.g., / 或 \)
+    # '*' 是通配符, 匹配任何字符
+    search_pattern = os.path.join(folder_path, f"*{suffix}")
+
+    if dry_run:
+        print(f"*** [空运行] 模式。搜索模式: {search_pattern} ***\n")
+    else:
+        print(f"*** [正式运行] 模式。搜索模式: {search_pattern} ***\n")
+
+    deleted_count = 0
+
+    # 2. glob.glob 会返回所有匹配文件的完整路径列表
+    for file_path in glob.glob(search_pattern):
+        try:
+            # 3. 仍然检查它是否是文件 (glob 也会匹配文件夹, 如果它们以 .csv 结尾)
+            if os.path.isfile(file_path):
+                if dry_run:
+                    print(f"[空运行] 将删除: {file_path}")
+                else:
+                    print(f"正在删除: {file_path}")
+                    os.remove(file_path)
+
+                deleted_count += 1
+
+        except OSError as e:
+            print(f"无法删除 {file_path}: {e}")
+
+    if dry_run:
+        print(f"\n--- [空运行] 结束。找到 {deleted_count} 个文件。---")
+    else:
+        print(f"\n--- [正式运行] 结束。删除 {deleted_count} 个文件。---")
+
 
 # Sensitivity simulation
 if __name__ == '__main__':
@@ -112,9 +153,9 @@ if __name__ == '__main__':
     # Run SWAT+ model in each directory
     txtinout_reader.run_swat(
         parameters=None,
-        begin_date='01-Jan-2007',
-        end_date='31-Dec-2008',
-        warmup=1
+        begin_date='01-Jan-2002',
+        end_date='31-Dec-2024',
+        warmup=6
     )
     # Extract interested simulation results to the result folder
     INPUT_FILE = tio_dir / 'channel_sd_day.txt'
@@ -143,3 +184,6 @@ if __name__ == '__main__':
     evaluate_performance(conf, results_dir, obs_dir, results_dir, '',
                          plot_stime, plot_etime, plot_flag=plot_flag)
 
+    # delete the extracted simulation data in csv format
+    delete_files_by_suffix_glob(results_dir, '.csv', True)
+    delete_files_by_suffix_glob(results_dir, '.csv', False)
