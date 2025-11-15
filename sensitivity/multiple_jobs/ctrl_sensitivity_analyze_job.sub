@@ -3,6 +3,7 @@
 #   ctrl_sensentivity_analyze.py to gather model simulation results and calculate sensitivity indices
 
 universe   = vanilla
+environment = "PYTHONUNBUFFERED=TRUE"
 executable = /opt/conda/envs/pyswatplus_util/bin/python3
 # Put controller.py in the same folder with this file.
 arguments  = sensitivity/ctrl_sensitivity_analyze.py

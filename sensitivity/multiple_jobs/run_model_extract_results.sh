@@ -30,7 +30,7 @@ cp /app/swatplus-61.0.2.11-ifx-lin_x86_64-Rel TxtInOut/
 PYTHON_EXEC="/opt/conda/envs/pyswatplus_util/bin/python3"
 
 echo "--- Step 3: Running SWAT+ model and calculating model performance---"
-$PYTHON_EXEC sensitivity/worker_runmodel.py "$CAL_FILE" "$OUT_PATH"
+$PYTHON_EXEC -u sensitivity/worker_runmodel.py "$CAL_FILE" "$OUT_PATH"
 
 echo "--- Worker Job: Job completed successfully ---"
 exit 0

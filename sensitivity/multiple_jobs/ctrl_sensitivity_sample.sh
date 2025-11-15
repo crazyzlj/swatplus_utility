@@ -15,7 +15,7 @@ cp /app/swatplus-61.0.2.11-ifx-lin_x86_64-Rel TxtInOut/
 PYTHON_EXEC="/opt/conda/envs/pyswatplus_util/bin/python3"
 
 echo "--- Step 3: Generate samples for sensitivity analysis ---"
-$PYTHON_EXEC sensitivity/ctrl_sensitivity_sample.py
+$PYTHON_EXEC -u sensitivity/ctrl_sensitivity_sample.py
 
 echo "--- Worker Job: Job completed successfully ---"
 exit 0
