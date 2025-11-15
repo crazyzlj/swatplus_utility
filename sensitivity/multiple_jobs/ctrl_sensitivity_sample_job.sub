@@ -13,7 +13,7 @@ transfer_executable = false
 container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.2.1.sif
 
 preserve_relative_paths = true
-transfer_input_files = ctrl_sensitivity_sample.sh,param_defs.txt,observed.tar.gz,TxtInOut.tar.gz,__init__.py,sensitivity/ctrl_sensitivity_sample.py
+transfer_input_files = ctrl_sensitivity_sample.sh,param_defs.txt,hru_combinations.json,channel_combinations.json,observed.tar.gz,TxtInOut.tar.gz,__init__.py,sensitivity/ctrl_sensitivity_sample.py
 
 # Transfer multi_runs folder and dag
 transfer_output_files = worker_jobs.dag, multi_runs
