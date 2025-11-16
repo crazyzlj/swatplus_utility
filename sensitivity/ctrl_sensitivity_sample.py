@@ -12,6 +12,8 @@ import pySWATPlus
 import pySWATPlus.utils as utils
 import pySWATPlus.validators as validators
 
+from utils.cal_param_def import write_calibration_files
+
 def parse_parameter_file(filepath: str,
                          spatial_group_data: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
@@ -152,7 +154,7 @@ def parse_parameter_file(filepath: str,
 # Sensitivity simulation
 if __name__ == '__main__':
     # Use 'Morris' first when too many parameters are considered, and then use FAST.
-    METHOD = 'FAST'
+    METHOD = 'morris'
     # --- FAST ---
     # Total model runs = N * D, M can be 4 (by default) or 8 and N > 4M^2 (N > 64)
     #   D is the count of considered parameters
@@ -167,15 +169,15 @@ if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.abspath(__file__))
     # Text file to define multiple parameters to be considered
     #  the format of each parameter MUST be "name,chang_type,lower_bound,upper_bound".
-    # param_def_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\param_defs-fast-2025-11-14.txt'
-    # hru_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\hru_combinations.json'
-    # rte_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\channel_combinations.json'
-    param_def_file = script_dir + '/../param_defs.txt'
-    hru_grp_file = script_dir + '/../hru_combinations.json'
-    rte_grp_file = script_dir + '/../channel_combinations.json'
+    param_def_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\param_defs-fast-2025-11-14.txt'
+    hru_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\hru_combinations.json'
+    rte_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\channel_combinations.json'
+    # param_def_file = script_dir + '/../param_defs.txt'
+    # hru_grp_file = script_dir + '/../hru_combinations.json'
+    # rte_grp_file = script_dir + '/../channel_combinations.json'
     # TxtInOut folder
-    # tio_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\TxtInOut'
-    tio_dir = script_dir + '/../TxtInOut'
+    tio_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\TxtInOut'
+    # tio_dir = script_dir + '/../TxtInOut'
     # Actual simulation folder for every model runs
     sim_dir_name = 'multi_runs'
     sim_dir_path = script_dir + '/../' + sim_dir_name
@@ -284,34 +286,37 @@ if __name__ == '__main__':
             sensim_output=sensim_output
     )
 
+    write_calibration_files(sample_array, copy_problem, params_bounds,
+                            txtinout_reader, tio_dir, sim_dir)
+
     # Write calibration.cal file
-    for idx, arr in enumerate(sample_array, start=1):
-        # Dictionary mapping for sensitivity simulation name and variable
-        var_names = copy_problem['names']
-        var_dict = {
-            var_names[i]: float(arr[i]) for i in range(len(var_names))
-        }
-        # Create ParameterType dictionary to write calibration.cal file
-        params_sim = []
-        for i, param in enumerate(params_bounds):
-            params_sim.append(
-                    {
-                        'name': param.name,
-                        'change_type': param.change_type,
-                        'value': var_dict[var_names[i]],
-                        'units': param.units,
-                        'conditions': param.conditions
-                    }
-            )
-        # List of ModifyDict objects
-        params = utils._parameters_modify_dict_list(
-                parameters=params_sim,
-        )
-        txtinout_reader._write_calibration_file(
-                parameters=params
-        )
-        # Remove and rename calibration.cal file to sim_<i>.cal
-        shutil.move(tio_dir / 'calibration.cal', sim_dir / f'sim_{idx}.cal')
+    # for idx, arr in enumerate(sample_array, start=1):
+    #     # Dictionary mapping for sensitivity simulation name and variable
+    #     var_names = copy_problem['names']
+    #     var_dict = {
+    #         var_names[i]: float(arr[i]) for i in range(len(var_names))
+    #     }
+    #     # Create ParameterType dictionary to write calibration.cal file
+    #     params_sim = []
+    #     for i, param in enumerate(params_bounds):
+    #         params_sim.append(
+    #                 {
+    #                     'name': param.name,
+    #                     'change_type': param.change_type,
+    #                     'value': var_dict[var_names[i]],
+    #                     'units': param.units,
+    #                     'conditions': param.conditions
+    #                 }
+    #         )
+    #     # List of ModifyDict objects
+    #     params = utils._parameters_modify_dict_list(
+    #             parameters=params_sim,
+    #     )
+    #     txtinout_reader._write_calibration_file(
+    #             parameters=params
+    #     )
+    #     # Remove and rename calibration.cal file to sim_<i>.cal
+    #     shutil.move(tio_dir / 'calibration.cal', sim_dir / f'sim_{idx}.cal')
 
     print(f"--- Controller Script Started (DAG Generator) ---")
     DAG_FILE_NAME = "worker_jobs.dag"
