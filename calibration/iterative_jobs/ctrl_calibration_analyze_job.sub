@@ -1,0 +1,31 @@
+# ctrl_calibration_analyze_job.sub
+# Runs the ctrl_calibration_analyze.py script
+
+universe   = vanilla
+
+executable = /opt/conda/envs/pyswatplus_util/bin/python3
+arguments  = -u calibration/ctrl_calibration_analyze.py
+transfer_executable = false
+container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.2.1.sif
+
+# Input needed (including the results from the workers)
+preserve_relative_paths = true
+transfer_input_files = iteration.state,multi_runs/gen_$(iter_index),__init__.py,calibration,utils,postprocess
+
+# Critical output for the POST script
+transfer_output_files = continue_signal.txt, iteration.state, multi_runs/gen_$(iter_index), multi_runs/gen_$(nextiter_index)
+
+# Use this to ensure the updated all_results.csv is also transferred back
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT_OR_EVICT
+
+request_cpus   = 1
+request_memory = 512 MB
+request_disk   = 1 GB
+
+# Log using the DAG Node name (GATHER_CHECK_CONTINUE)
+log    = dag_logs/ctrl_calibration_analyze_job_$(iter_index).log
+output = dag_logs/ctrl_calibration_analyze_job_$(iter_index).out
+error  = dag_logs/ctrl_calibration_analyze_job_$(iter_index).err
+
+queue 1
