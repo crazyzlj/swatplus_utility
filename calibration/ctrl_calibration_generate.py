@@ -119,7 +119,7 @@ if __name__ == "__main__":
         problem = SWATPlusProblem(copy_problem, n_obj=N_OBJ)
 
         # 2. Determine optimization algorithm based the count of objectives
-        algorithm = get_algorithm(problem.n_obj, N_POP)
+        algorithm, act_pop_size = get_algorithm(problem.n_obj, N_POP)
         algorithm.setup(problem,
                         termination=get_termination("n_gen", MAX_GENERATIONS),
                         seed=1,  # To guarantee the initial population can be reproduced
