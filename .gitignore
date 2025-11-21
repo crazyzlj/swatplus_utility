@@ -288,3 +288,11 @@ http-client.private.env.json
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+.idea
+
+iteration.state
+continue_signal.txt
+multi_runs/
+worker_jobs_gen*
+worker_jobs_current*
