@@ -1,5 +1,10 @@
-import json
+from __future__ import absolute_import
 import os
+import sys
+if os.path.abspath(os.path.join(sys.path[0], '..')) not in sys.path:
+    sys.path.insert(0, os.path.abspath(os.path.join(sys.path[0], '..')))
+
+import json
 import pathlib
 import numpy as np
 import pandas as pd
