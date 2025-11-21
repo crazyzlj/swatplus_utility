@@ -79,13 +79,13 @@ def get_algorithm(n_obj, target_pop_size, change_popsize=False):
 
     dup_elim = MyDuplicateElimination()
 
-    if n_obj == 2:
+    if n_obj <= 5:
         print(f"Detected {n_obj} objectives. Using NSGA-II.")
         algorithm = NSGA2(
                 pop_size=target_pop_size,
                 eliminate_duplicates=dup_elim
         )
-    elif n_obj >= 3:
+    elif n_obj > 5:
         print(f"Detected {n_obj} objectives. Using NSGA-III.")
         print(f"Target N_POP is {target_pop_size}.")
 
