@@ -213,7 +213,6 @@ def plot_morris_barchart(Si, problem, output_filepath, indicator_name=''):
 if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.abspath(__file__))
     # Actual simulation folder for every model runs
-    # sim_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\testsensitivity'
     sim_dir = script_dir + '/../multi_runs'
     sim_dir = pathlib.Path(sim_dir).resolve()
 

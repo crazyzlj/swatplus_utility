@@ -39,12 +39,10 @@ if __name__ == "__main__":
 
     # Text file to define multiple parameters to be considered
     #  the format of each parameter MUST be "name,chang_type,lower_bound,upper_bound".
-    # param_def_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\param_defs-cali-2025-11-17.txt'
-    # hru_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\hru_combinations.json'
-    # rte_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\channel_combinations.json'
     param_def_file = script_dir + '/../param_defs.txt'
     hru_grp_file = script_dir + '/../hru_combinations.json'
     rte_grp_file = script_dir + '/../channel_combinations.json'
+    aqu_grp_file = script_dir + '/../aqu_combinations.json'
     # TxtInOut folder
     # tio_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\TxtInOut'
     tio_dir = script_dir + '/../TxtInOut'
@@ -81,12 +79,20 @@ if __name__ == "__main__":
             loaded_channel_data = json.load(f)
             spatial_data_config['rte'] = loaded_channel_data
 
+    aqu_grp_data = None
+    if aqu_grp_file is not None and os.path.exists(aqu_grp_file):
+        with open(aqu_grp_file, 'r') as f:
+            loaded_aqu_data = json.load(f)
+            spatial_data_config['aqu'] = loaded_aqu_data
+
+
     # 此映射表告诉函数在 'hru' 组中查找 'hru_ids' 键，
     # 在 'rte' 组中查找 'channel_ids' 键。
     # 您可以根据需要扩展此映射。
     id_field_map = {
         'hru': 'hru_ids',
-        'rte': 'channel_ids'
+        'rte': 'channel_ids',
+        'aqu': 'aqu_ids'
     }
 
     param_def = parse_parameter_file(param_def_file, spatial_data_config, id_field_map)

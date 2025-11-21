@@ -55,20 +55,23 @@ def delete_files_by_suffix_glob(folder_path: str,
         print(f"\n--- [正式运行] 结束。删除 {deleted_count} 个文件。---")
 
 
-# Sensitivity simulation
 if __name__ == '__main__':
-    # Calibration file
-    cal_file = sys.argv[1]
-    # Result folder for extracted simulation results and calculated model performances
-    results_dir = sys.argv[2]
+    cal_file = None
+    if len(sys.argv) >= 2:
+        # Calibration file
+        cal_file = sys.argv[1]
+    results_dir = None
+    if len(sys.argv) >= 3:
+        # Result folder for extracted simulation results and calculated model performances
+        results_dir = sys.argv[2]
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     # TxtInOut folder
-    # tio_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\TxtInOut'
     tio_dir = script_dir + '/../TxtInOut'
     # Observation folder
-    # obs_dir = r'D:\data_m\manitowoc\observed'
     obs_dir = script_dir + '/../observed'
+    if results_dir is None:
+        results_dir = script_dir + '/../TxtInOut/OutletsResults'
 
     CHANNEL_NUMBER = [68]
     SUFFIX = ['_usgs04085427']

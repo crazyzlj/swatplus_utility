@@ -143,9 +143,7 @@ def calculate_n_pop(n_obj, p):
         return 0
 
 
-# --- 在这里修改并运行来查询 ---
 if __name__ == "__main__":
-    # --- 您想查询的设置 ---
     N_OBJECTIVES = 4
     N_PARTITIONS = 10
 

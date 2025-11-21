@@ -14,7 +14,7 @@ transfer_executable = false
 container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.2.1.sif
 
 preserve_relative_paths = true
-transfer_input_files = multi_runs/gen_$(iter_index),iteration.state,ctrl_calibration_generate.sh,param_defs.txt,hru_combinations.json,channel_combinations.json,observed.tar.gz,TxtInOut.tar.gz,__init__.py,calibration,utils
+transfer_input_files = multi_runs/gen_$(iter_index),iteration.state,ctrl_calibration_generate.sh,param_defs.txt,aqu_combinations.json,hru_combinations.json,channel_combinations.json,observed.tar.gz,TxtInOut.tar.gz,__init__.py,calibration,utils
 
 # Transfer multi_runs folder, workers' dag, and the critical state for indicating the next DAG step
 transfer_output_files = worker_jobs_current.dag, multi_runs/gen_$(iter_index), iteration.state

@@ -37,10 +37,6 @@ if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.abspath(__file__))
     # Text file to define multiple parameters to be considered
     #  the format of each parameter MUST be "name,chang_type,lower_bound,upper_bound".
-    # param_def_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\param_defs_morris-2025-11-19.txt'
-    # hru_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\hru_combinations.json'
-    # rte_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\channel_combinations.json'
-    # aqu_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\aqu_combinations.json'
     param_def_file = script_dir + '/../param_defs.txt'
     hru_grp_file = script_dir + '/../hru_combinations.json'
     rte_grp_file = script_dir + '/../channel_combinations.json'
@@ -51,7 +47,6 @@ if __name__ == '__main__':
         'aqu': 'aqu_ids'
     }
     # TxtInOut folder
-    # tio_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\TxtInOut'
     tio_dir = script_dir + '/../TxtInOut'
     # Actual simulation folder for every model runs
     sim_dir_name = 'multi_runs'

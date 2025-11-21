@@ -206,9 +206,19 @@ def read_simulation_results(gen_dir):
 
         all_objectives_list.append(individual_objectives)
 
+        # penalty less than 0 means it is a feasible solution
         for metric_name, v in PENALTIES.items():
             value = sim_data[metric_name]
-            individual_penalties.append(v - value)
+            if "PBIAS" in metric_name:
+                value = abs(value)
+                individual_penalties.append(value - v)
+            elif "NSE" in metric_name:
+                individual_penalties.append(v - value)
+            elif "RSR" in metric_name:
+                individual_penalties.append(value - v)
+            else:
+                individual_penalties.append(v - value)
+
         all_penalties_list.append(individual_penalties)
 
         sim_data['sim_index'] = i
@@ -363,7 +373,7 @@ if __name__ == "__main__":
         print(f"Error during read_simulation_results: {e}")
         # 使作业失败
         raise
-    # 3. (!! 新增 !!) 读取模拟参数 X (Gen k)
+    # 3. 读取模拟参数 X (Gen k)
     print(f"Loading simulation parameters (X) from {cur_pop_fpath}...")
     if not os.path.exists(cur_pop_fpath):
         print(f"FATAL ERROR: Missing population file {cur_pop_fpath}")
@@ -376,8 +386,7 @@ if __name__ == "__main__":
         print("Detected 1D parameters array, reshaping to 2D.")
         X = X.reshape(-1, 1)
 
-    # 4. (!! 关键修正 !!)
-    #    将 X 和 F 组合成 pymoo 的 Population 对象
+    # 4. 将 X 和 F 组合成 pymoo 的 Population 对象
     print("Re-creating Population object from X and F...")
     evaluated_population = Population.new("X", X, "F", F, "G", G)
 
