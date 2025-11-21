@@ -291,8 +291,16 @@ __marimo__/
 
 .idea
 
+# ignore SWATplus project and assocated configurations for running on CHTC
+TxtInOut*/
+observed/
 iteration.state
 continue_signal.txt
 multi_runs/
 worker_jobs_gen*
 worker_jobs_current*
+
+param_defs.txt
+hru_combinations.json
+channel_combinations.json
+aqu_combinations.json
