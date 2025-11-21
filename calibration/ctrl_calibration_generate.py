@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # Text file to define multiple parameters to be considered
     #  the format of each parameter MUST be "name,chang_type,lower_bound,upper_bound".
-    # param_def_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\param_defs-cali-up1up2-2025-11-15.txt'
+    # param_def_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\param_defs-cali-2025-11-17.txt'
     # hru_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\hru_combinations.json'
     # rte_grp_file = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\subbasin_updown_relationships\channel_combinations.json'
     param_def_file = script_dir + '/../param_defs.txt'

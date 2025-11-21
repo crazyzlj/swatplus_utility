@@ -35,14 +35,29 @@ MAX_GENERATIONS = 3
 #     "363313_flo_out_mon_cali_R_square": 0.19
 # }
 OBJECTIVES = {
-    # two objectives will use NSGA-II
-    # "usgs04085427_flo_out_day_cali_NSE": "max",
-    # "usgs04085427_flo_out_day_cali_PBIAS": "min"
-    # three or more objectives will use NSGA-III
-    "363375_flo_out_mon_cali_NSE": "max",
-    "363375_flo_out_mon_cali_PBIAS": "min",
-    "363313_flo_out_mon_cali_NSE": "max",
-    "363313_flo_out_mon_cali_PBIAS": "min"
+    # Five or less objectives will use NSGA-II
+    "usgs04085427_flo_out_day_cali_COMBINED": "max",
+    "usgs04085427_flo_out_mon_cali_COMBINED": "max",
+    "363375_flo_out_mon_cali_COMBINED": "max",
+    "363313_flo_out_mon_cali_COMBINED": "max",
+    "10020782_flo_out_mon_cali_COMBINED": "max"
+}
+
+MIN_NSE = -1
+MAX_PBIAS = 90
+WORST_VALUE = -99
+
+COMBINED_WEIGHTS = {
+    "NSE": 0.8,
+    "PBIAS": 0.2
+}
+
+PENALTIES = {
+    "usgs04085427_flo_out_day_cali_NSE": 0.01,
+    "usgs04085427_flo_out_mon_cali_NSE": 0.01,
+    "363375_flo_out_mon_cali_NSE": 0.01,
+    "363313_flo_out_mon_cali_NSE": 0.01,
+    "10020782_flo_out_mon_cali_NSE": 0.01
 }
 
 WORKER_DAG_TEMPLATE = 'worker_jobs_gen_{}.dag'

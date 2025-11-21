@@ -23,6 +23,7 @@ from utils import RUNS_BASE_DIR
 from utils.iterative_job import get_current_generation, check_continue, SIGNAL_FILE, update_generation
 
 from config import N_POP, MAX_GENERATIONS, OBJECTIVES, WORKER_DAG_TEMPLATE, POP_FILE, GENSTATE_FILE
+from config import MIN_NSE, MAX_PBIAS, WORST_VALUE, COMBINED_WEIGHTS, PENALTIES
 
 def save_pareto_to_json(algorithm, obj_labels, output_filename):
     """
@@ -79,6 +80,50 @@ def save_pareto_to_json(algorithm, obj_labels, output_filename):
     except Exception as e:
         print(f"WARNING: 写入 Pareto JSON 文件时出错: {e}")
 
+def combined_score(nse, pbias,
+                   nse_min=-1.0,
+                   pbias_max=30.0,
+                   w_nse=0.6,
+                   w_pbias=0.4,
+                   worst_value=99.):
+    """
+    Combine NSE and PBIAS into one metric (higher is better).
+
+    Parameters
+    ----------
+    nse : float
+    pbias : float
+    nse_min : float
+        Minimum acceptable NSE. Below this returns a very bad score.
+    pbias_max : float
+        Maximum acceptable absolute PBIAS (%).
+    w_nse : float
+        Weight for NSE.
+    w_pbias : float
+        Weight for PBIAS.
+
+    Returns
+    -------
+    score : float
+        Larger values mean better performance.
+    """
+
+    # ---------- hard constraint ----------
+    if nse < nse_min or abs(pbias) > pbias_max:
+        return worst_value
+
+    # ---------- normalize NSE ----------
+    nse_norm = (nse - nse_min) / (1 - nse_min)
+    nse_norm = max(0, min(1, nse_norm))
+
+    # ---------- normalize PBIAS ----------
+    pbias_norm = 1 - min(1.0, abs(pbias) / pbias_max)
+
+    # ---------- combine ----------
+    score = w_nse * nse_norm + w_pbias * pbias_norm
+
+    return score
+
 def read_simulation_results(gen_dir):
     """
     (重大修改)
@@ -88,14 +133,17 @@ def read_simulation_results(gen_dir):
     print(f"Reading simulation results based on config.OBJECTIVES...")
 
     all_objectives_list = []  # 存储所有个体的目标值
+    all_penalties_list = []
 
     # 从配置中获取目标定义
     objectives_config = OBJECTIVES
     n_pop = N_POP
 
+    data_rows = []
+
     for i in range(1, n_pop + 1):
         sim_dir = gen_dir / f'OutletsResults_{i}'
-        result_file =  sim_dir / 'model_performance.json'
+        result_file = sim_dir / 'model_performance.json'
 
         if not os.path.exists(result_file):
             print(f"FATAL ERROR: Result file not found for {sim_dir}")
@@ -108,7 +156,33 @@ def read_simulation_results(gen_dir):
                 print(f"FATAL ERROR: Could not decode JSON in {result_file}")
                 raise
 
+        # Put the calculation of combined index here, may be moved elsewhere.
+        station_prefix = []
+        for name in sim_data.keys():
+            curname = name[:name.rfind('_')]
+            if curname not in station_prefix:
+                station_prefix.append(curname)
+        for sname in station_prefix:
+            combine_name = f"{sname}_COMBINED"
+            if combine_name in sim_data:
+                continue
+            nse_name = f"{sname}_NSE"
+            pbias_name = f"{sname}_PBIAS"
+            if nse_name not in sim_data:
+                continue
+            if pbias_name not in sim_data:
+                continue
+            nse_v = sim_data[nse_name]
+            pbias_v = sim_data[pbias_name]
+            comb_v = combined_score(nse_v, pbias_v, MIN_NSE, MAX_PBIAS,
+                                    COMBINED_WEIGHTS["NSE"], COMBINED_WEIGHTS["PBIAS"],
+                                    WORST_VALUE)
+            sim_data[combine_name] = comb_v
+
+        # end of calculation of combined index
+
         individual_objectives = []
+        individual_penalties = []
 
         # 2. 遍历在 config.py 中定义的目标
         for metric_name, goal in objectives_config.items():
@@ -132,7 +206,26 @@ def read_simulation_results(gen_dir):
 
         all_objectives_list.append(individual_objectives)
 
+        for metric_name, v in PENALTIES.items():
+            value = sim_data[metric_name]
+            individual_penalties.append(v - value)
+        all_penalties_list.append(individual_penalties)
+
+        sim_data['sim_index'] = i
+        data_rows.append(sim_data)
+
     F = np.array(all_objectives_list)
+    G = np.array(all_penalties_list)
+
+
+    indicator_df_unordered = pd.DataFrame(data_rows)
+    indicator_df = indicator_df_unordered.set_index('sim_index').sort_index()
+    indicator_file = gen_dir / 'model_performances_all.csv'
+    try:
+        indicator_df.to_csv(indicator_file, index=True)
+        print(f"--- Save all indicators of model performances to: {indicator_file} ---")
+    except Exception as e:
+        print(f"!! Error: cannot save indicator_df to CSV: {e} !!")
 
     if F.shape != (n_pop, len(objectives_config)):
         print(f"FATAL ERROR: Shape mismatch in objectives array. "
@@ -140,7 +233,7 @@ def read_simulation_results(gen_dir):
         raise ValueError("Shape mismatch in objectives array")
 
     print(f"Successfully loaded and processed results for {n_pop} individuals.")
-    return F
+    return F, G
 
 
 def visualize_results(algorithm, iter_index, obj_labels, sim_dir):
@@ -265,7 +358,7 @@ if __name__ == "__main__":
 
     # 2. 读取模拟结果
     try:
-        F = read_simulation_results(gen_dir)
+        F, G = read_simulation_results(gen_dir)
     except Exception as e:
         print(f"Error during read_simulation_results: {e}")
         # 使作业失败
@@ -286,7 +379,7 @@ if __name__ == "__main__":
     # 4. (!! 关键修正 !!)
     #    将 X 和 F 组合成 pymoo 的 Population 对象
     print("Re-creating Population object from X and F...")
-    evaluated_population = Population.new("X", X, "F", F)
+    evaluated_population = Population.new("X", X, "F", F, "G", G)
 
     # 5. "tell" 算法 *已评估的种群*
     print("Telling algorithm the evaluated population...")
