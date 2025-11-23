@@ -41,4 +41,12 @@
 **注意：iteration.state文件是自己新建的，里面只有一个0，multi_runs/gen_0是自己新建的空文件夹，
 目前没有太方便的办法，只能先这样手动创建文件、满足遗传算法初始运行的文件要求。**
 
+```
 condor_submit_dag -insert_env "iter_index=0" -insert_env "nextiter_index=1" ctrl_calibration.dag
+```
+
+submit generate or analyze job:
+```
+condor_submit ctrl_calibration_generate_job.sub iter_index=0
+condor_submit ctrl_calibration_analyze_job.sub iter_index=0 nextiter_index=1
+```

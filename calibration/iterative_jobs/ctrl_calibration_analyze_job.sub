@@ -21,7 +21,7 @@ when_to_transfer_output = ON_EXIT_OR_EVICT
 
 request_cpus   = 1
 request_memory = 512 MB
-request_disk   = 1 GB
+request_disk   = 2 GB
 
 # Log using the DAG Node name (GATHER_CHECK_CONTINUE)
 log    = dag_logs/ctrl_calibration_analyze_job_$(iter_index).log
