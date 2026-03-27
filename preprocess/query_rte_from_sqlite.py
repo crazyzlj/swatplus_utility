@@ -158,6 +158,7 @@ if __name__ == "__main__":
                  57, 58, 60, 61, 62, 63, 64, 65, 68, 83, 84, 85],
         'down1': [31, 30, 32],
         'all': None}
+    sub_inputs['mid1down1'] = sub_inputs['mid1'] + sub_inputs['down1']
 
     strahler_group = {'headwater': [1, 2],
                       'midbranch': [3, 4],

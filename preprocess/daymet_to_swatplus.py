@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import math
 import os, sys
+import re
 from pygeoc.utils import FileClass, UtilClass, MathClass, StringClass
 
 YEAR_LINE = "years:"
@@ -155,6 +156,27 @@ def main(data_file, out_dir,pcp_cli_list,slr_cli_list,temp_cli_list,hum_cli_list
             hum_cli_list.append(fname)
 
 
+def sort_swat_filenames(data_list, reverse=False, use_natural_sort=False):
+    """
+    对列表进行排序。
+
+    参数:
+        data_list (list): 待排序的字符串列表
+        reverse (bool): False为升序(默认)，True为降序
+        use_natural_sort (bool):
+            False (默认) -> 使用标准ASCII排序 (SWAT+模型必须用这个!)
+            True -> 使用人类自然排序 (S2 会排在 S10 前面)
+    """
+
+    if use_natural_sort:
+        # 自然排序逻辑: 将字符串中的数字提取出来作为排序依据
+        # 例如: S2pcp -> ['S', 2, 'pcp']
+        convert = lambda text: int(text) if text.isdigit() else text.lower()
+        alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+        return sorted(data_list, key=alphanum_key, reverse=reverse)
+    else:
+        # 标准 ASCII 排序 (Fortran兼容)
+        return sorted(data_list, reverse=reverse)
 
 if __name__ == "__main__":
     daymet_dir = r'd:\data_m\manitowoc\weather\1013\daymet'
@@ -184,10 +206,14 @@ if __name__ == "__main__":
                 else:
                     continue
     if len(pcp_cli_list) > 0:
+        pcp_cli_list = sort_swat_filenames(pcp_cli_list)
         write_swatplus_stationdata_indexfile(out_dir+os.sep+'pcp.cli', 'filename', pcp_cli_list)
     if len(slr_cli_list) > 0:
+        slr_cli_list = sort_swat_filenames(slr_cli_list)
         write_swatplus_stationdata_indexfile(out_dir + os.sep + 'slr.cli', 'filename', slr_cli_list)
     if len(temp_cli_list) > 0:
+        temp_cli_list = sort_swat_filenames(temp_cli_list)
         write_swatplus_stationdata_indexfile(out_dir + os.sep + 'tmp.cli', 'filename', temp_cli_list)
     if len(hum_cli_list) > 0:
+        hum_cli_list = sort_swat_filenames(hum_cli_list)
         write_swatplus_stationdata_indexfile(out_dir + os.sep + 'hmd.cli', 'filename', hum_cli_list)

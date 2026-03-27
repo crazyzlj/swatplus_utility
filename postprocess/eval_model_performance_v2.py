@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os
 import sys
+
 if os.path.abspath(os.path.join(sys.path[0], '..')) not in sys.path:
     sys.path.insert(0, os.path.abspath(os.path.join(sys.path[0], '..')))
 
@@ -62,6 +63,7 @@ def process_date_column(df, date_col):
                                       errors='coerce')
 
     return df
+
 
 def load_data(file_path: str, value_col: str = 'Value') -> pd.DataFrame:
     """
@@ -202,7 +204,7 @@ def plot_time_series(sim_df: pd.DataFrame, obs_df: pd.DataFrame, config: Dict[st
 
 def evaluate_performance(conf: Dict[str, Any], sim_dir: str, obs_dir: str, fig_dir: str,
                          precip_file: str, plot_stime: str, plot_etime: str,
-                         plot_flag : bool = True):
+                         plot_flag: bool = True):
     """
     主函数，用于遍历配置、计算指标并生成图表。
     """
@@ -256,12 +258,15 @@ def evaluate_performance(conf: Dict[str, Any], sim_dir: str, obs_dir: str, fig_d
                 if sim_df is None or obs_df is None:
                     logger.warning("  - 因缺少数据文件而跳过。")
                     continue
+                sim_df.sort_index(inplace=True)
+                obs_df.sort_index(inplace=True)
 
                 # 创建用于指标计算的合并数据集
                 merged_df = pd.merge(obs_df.rename(columns={'Value': 'Obs'}),
                                      sim_df.rename(columns={'Value': 'Sim'}),
                                      left_index=True, right_index=True, how='inner')
                 merged_df.dropna(inplace=True)
+                merged_df.sort_index(inplace=True)
 
                 if merged_df.empty:
                     logger.warning("  - 因找不到匹配的时间序列数据而跳过。")
@@ -275,7 +280,8 @@ def evaluate_performance(conf: Dict[str, Any], sim_dir: str, obs_dir: str, fig_d
                     for k, v in cali_metrics.items():
                         uniq_key = f'{primary_key}_cali_{k}'
                         all_indicators[uniq_key] = v
-                    logger.info(f"  - 率定期指标 ({settings['cali_stime']} - {settings['cali_etime']}): {cali_metrics}")
+                    logger.info(
+                        f"  - 率定期指标 ({settings['cali_stime']} - {settings['cali_etime']}): {cali_metrics}")
 
                 if settings.get('vali_stime') and settings.get('vali_etime'):
                     vali_metrics = calculate_metrics(merged_df, settings['vali_stime'],
@@ -284,7 +290,8 @@ def evaluate_performance(conf: Dict[str, Any], sim_dir: str, obs_dir: str, fig_d
                     for k, v in vali_metrics.items():
                         uniq_key = f'{primary_key}_vali_{k}'
                         all_indicators[uniq_key] = v
-                    logger.info(f"  - 验证期指标 ({settings['vali_stime']} - {settings['vali_etime']}): {vali_metrics}")
+                    logger.info(
+                        f"  - 验证期指标 ({settings['vali_stime']} - {settings['vali_etime']}): {vali_metrics}")
 
                 if not plot_flag:
                     continue
@@ -310,122 +317,297 @@ if __name__ == '__main__':
     plot_etime = '2024/12/31'
 
     FIGURES_DIR = SIM_DATA_DIR
-    plot_flag = False
+    plot_flag = True
 
     # 主配置字典
-    conf = {'usgs04085427': {'flo_out': {'day': {'ylabel': 'Q(m^3/s)',
-                                                 'plot_style': 'dotline',
-                                                 'cali_stime': '2014/1/1',
-                                                 'cali_etime': '2024/12/31',
-                                                 'vali_stime': '2008/1/1',
-                                                 'vali_etime': '2013/12/31'},
-                                         'mon': {'ylabel': 'Q(m^3/s)',
-                                                 'plot_style': 'dotline',
-                                                 'cali_stime': '2014/1',
-                                                 'cali_etime': '2024/12',
-                                                 'vali_stime': '2008/1',
-                                                 'vali_etime': '2013/12'}},
-                             'sed_out': {'day': {'ylabel': 'Sed(tons)',
-                                                 'plot_style': 'point',
-                                                 'cali_stime': '2011/1/1',
-                                                 'cali_etime': '2024/12/31',
-                                                 'vali_stime': '',
-                                                 'vali_etime': ''},
-                                         'mon': {'ylabel': 'Sed(tons)',
-                                                 'plot_style': 'dotline',
-                                                 'cali_stime': '2014/1',
-                                                 'cali_etime': '2019/12',
-                                                 'vali_stime': '2008/1',
-                                                 'vali_etime': '2013/12'}},
-                             'no3_out': {'day': {'ylabel': 'NO3 (Kg N)',
-                                                 'plot_style': 'point',
-                                                 'cali_stime': '2008/1/1',
-                                                 'cali_etime': '2024/12/31',
-                                                 'vali_stime': '',
-                                                 'vali_etime': ''}},
-                             'nh3_out': {'day': {'ylabel': 'NH3 (Kg N)',
-                                                 'plot_style': 'point',
-                                                 'cali_stime': '2008/1/1',
-                                                 'cali_etime': '2024/12/31',
-                                                 'vali_stime': '',
-                                                 'vali_etime': ''}},
-                             'orgn_out': {'day': {'ylabel': 'OrgN (Kg N)',
-                                                  'plot_style': 'point',
-                                                  'cali_stime': '2008/1/1',
-                                                  'cali_etime': '2023/12/31',
-                                                  'vali_stime': '',
-                                                  'vali_etime': ''}},
-                             'tn_out': {'day': {'ylabel': 'TN (Kg N)',
-                                                'plot_style': 'point',
-                                                'cali_stime': '2008/1/1',
-                                                'cali_etime': '2024/12/31',
-                                                'vali_stime': '',
-                                                'vali_etime': ''}},
-                             'solp_out': {'day': {'ylabel': 'SolP (Kg P)',
-                                                  'plot_style': 'point',
-                                                  'cali_stime': '2011/1/1',
-                                                  'cali_etime': '2024/12/31',
-                                                  'vali_stime': '',
-                                                  'vali_etime': ''}},
-                             'tp_out': {'day': {'ylabel': 'TP (Kg P)',
-                                                'plot_style': 'point',
-                                                'cali_stime': '2011/1/1',
-                                                'cali_etime': '2024/12/31',
-                                                'vali_stime': '',
-                                                'vali_etime': ''},
-                                        'mon': {'ylabel': 'TP (Kg P)',
-                                                'plot_style': 'dotline',
-                                                'cali_stime': '2014/1',
-                                                'cali_etime': '2019/12',
-                                                'vali_stime': '2008/1',
-                                                'vali_etime': '2013/12'}},
-                             },
-            '363375': {'flo_out': {'mon': {'ylabel': 'Q (m^3/s)',
-                                           'plot_style': 'dotline',
-                                           'cali_stime': '2017/7',
-                                           'cali_etime': '2019/5',
-                                           'vali_stime': '',
-                                           'vali_etime': ''}},
-                       'sed_out': {'mon': {'ylabel': 'Sed (tons)',
-                                           'plot_style': 'dotline',
-                                           'cali_stime': '2017/7',
-                                           'cali_etime': '2019/5',
-                                           'vali_stime': '',
-                                           'vali_etime': ''}},
-                       'tp_out': {'mon': {'ylabel': 'TP (Kg P)',
-                                          'plot_style': 'dotline',
-                                          'cali_stime': '2017/7',
-                                          'cali_etime': '2019/5',
-                                          'vali_stime': '',
-                                          'vali_etime': ''}},
-                       },
-            '10020782': {'flo_out': {'mon': {'ylabel': 'Q (m^3/s)',
+    conf = {
+        'usgs04085427': {'flo_out': {'day': {'ylabel': 'Q(m^3/s)',
                                              'plot_style': 'dotline',
-                                             'cali_stime': '2017/7',
-                                             'cali_etime': '2019/10',
+                                             'cali_stime': '2014/1/1',
+                                             'cali_etime': '2024/12/31',
+                                             'vali_stime': '2008/1/1',
+                                             'vali_etime': '2013/12/31'},
+                                     'mon': {'ylabel': 'Q(m^3/s)',
+                                             'plot_style': 'dotline',
+                                             'cali_stime': '2014/1',
+                                             'cali_etime': '2024/12',
+                                             'vali_stime': '2008/1',
+                                             'vali_etime': '2013/12'}},
+                         'sed_out': {'day': {'ylabel': 'Sed(tons)',
+                                             'plot_style': 'point',
+                                             'cali_stime': '2011/1/1',
+                                             'cali_etime': '2024/12/31',
                                              'vali_stime': '',
-                                             'vali_etime': ''}}
+                                             'vali_etime': ''},
+                                     'mon': {'ylabel': 'Sed(tons)',
+                                             'plot_style': 'dotline',
+                                             'cali_stime': '2014/1',
+                                             'cali_etime': '2019/12',
+                                             'vali_stime': '2008/1',
+                                             'vali_etime': '2013/12'}},
+                         'no3_out': {'day': {'ylabel': 'NO3 (Kg N)',
+                                             'plot_style': 'point',
+                                             'cali_stime': '2008/1/1',
+                                             'cali_etime': '2024/12/31',
+                                             'vali_stime': '',
+                                             'vali_etime': ''}},
+                         'nh3_out': {'day': {'ylabel': 'NH3 (Kg N)',
+                                             'plot_style': 'point',
+                                             'cali_stime': '2008/1/1',
+                                             'cali_etime': '2024/12/31',
+                                             'vali_stime': '',
+                                             'vali_etime': ''}},
+                         'orgn_out': {'day': {'ylabel': 'OrgN (Kg N)',
+                                              'plot_style': 'point',
+                                              'cali_stime': '2008/1/1',
+                                              'cali_etime': '2023/12/31',
+                                              'vali_stime': '',
+                                              'vali_etime': ''}},
+                         'tn_out': {'day': {'ylabel': 'TN (Kg N)',
+                                            'plot_style': 'point',
+                                            'cali_stime': '2008/1/1',
+                                            'cali_etime': '2024/12/31',
+                                            'vali_stime': '',
+                                            'vali_etime': ''}},
+                         'solp_out': {'day': {'ylabel': 'SolP (Kg P)',
+                                              'plot_style': 'point',
+                                              'cali_stime': '2011/1/1',
+                                              'cali_etime': '2024/12/31',
+                                              'vali_stime': '',
+                                              'vali_etime': ''}},
+                         'tp_out': {'day': {'ylabel': 'TP (Kg P)',
+                                            'plot_style': 'point',
+                                            'cali_stime': '2011/1/1',
+                                            'cali_etime': '2024/12/31',
+                                            'vali_stime': '',
+                                            'vali_etime': ''},
+                                    'mon': {'ylabel': 'TP (Kg P)',
+                                            'plot_style': 'dotline',
+                                            'cali_stime': '2014/1',
+                                            'cali_etime': '2019/12',
+                                            'vali_stime': '2008/1',
+                                            'vali_etime': '2013/12'}},
                          },
-            '363313': {'flo_out': {'mon': {'ylabel': 'Q (m^3/s)',
-                                           'plot_style': 'dotline',
-                                           'cali_stime': '2017/7',
-                                           'cali_etime': '2019/10',
-                                           'vali_stime': '',
-                                           'vali_etime': ''}},
-                       'sed_out': {'mon': {'ylabel': 'Sed (tons)',
-                                           'plot_style': 'dotline',
-                                           'cali_stime': '2017/7',
-                                           'cali_etime': '2019/10',
-                                           'vali_stime': '',
-                                           'vali_etime': ''}},
-                       'tp_out': {'mon': {'ylabel': 'TP (Kg P)',
-                                          'plot_style': 'dotline',
-                                          'cali_stime': '2017/7',
-                                          'cali_etime': '2019/10',
-                                          'vali_stime': '',
-                                          'vali_etime': ''}},
-                       }
-            }
+        '363375': {'flo_out': {'mon': {'ylabel': 'Q (m^3/s)',
+                                       'plot_style': 'dotline',
+                                       'cali_stime': '2017/7',
+                                       'cali_etime': '2019/5',
+                                       'vali_stime': '',
+                                       'vali_etime': ''}},
+                   'sed_out': {'mon': {'ylabel': 'Sed (tons)',
+                                       'plot_style': 'dotline',
+                                       'cali_stime': '2017/7',
+                                       'cali_etime': '2019/5',
+                                       'vali_stime': '',
+                                       'vali_etime': ''}},
+                   'tp_out': {'mon': {'ylabel': 'TP (Kg P)',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2017/7',
+                                      'cali_etime': '2019/5',
+                                      'vali_stime': '',
+                                      'vali_etime': ''}},
+                   },
+        '10020782': {'flo_out': {'mon': {'ylabel': 'Q (m^3/s)',
+                                         'plot_style': 'dotline',
+                                         'cali_stime': '2017/7',
+                                         'cali_etime': '2019/10',
+                                         'vali_stime': '',
+                                         'vali_etime': ''}}
+                     },
+        '363313': {'flo_out': {'mon': {'ylabel': 'Q (m^3/s)',
+                                       'plot_style': 'dotline',
+                                       'cali_stime': '2017/7',
+                                       'cali_etime': '2019/10',
+                                       'vali_stime': '',
+                                       'vali_etime': ''}},
+                   'sed_out': {'mon': {'ylabel': 'Sed (tons)',
+                                       'plot_style': 'dotline',
+                                       'cali_stime': '2017/7',
+                                       'cali_etime': '2019/10',
+                                       'vali_stime': '',
+                                       'vali_etime': ''}},
+                   'tp_out': {'mon': {'ylabel': 'TP (Kg P)',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2017/7',
+                                      'cali_etime': '2019/10',
+                                      'vali_stime': '',
+                                      'vali_etime': ''}},
+                   },
+        'PK237': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'PK238': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'PK239': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              },
+                  'gw_no3': {'day': {'ylabel': 'm',
+                                     'plot_style': 'dotline',
+                                     'cali_stime': '2008/1/1',
+                                     'cali_etime': '2024/12/31',
+                                     'vali_stime': '',
+                                     'vali_etime': ''}
+                             }
+                  },
+        'PK240': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'PK312': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'PK313': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'PK331': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'PK335': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'PK345': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'VT642': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'VT691': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'VU732': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'VU806': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              },
+                  'gw_no3': {'day': {'ylabel': 'm',
+                                     'plot_style': 'dotline',
+                                     'cali_stime': '2008/1/1',
+                                     'cali_etime': '2024/12/31',
+                                     'vali_stime': '',
+                                     'vali_etime': ''}
+                             }
+                  },
+        'VU807': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'VU861': {'gw_head': {'day': {'ylabel': 'm',
+                                      'plot_style': 'dotline',
+                                      'cali_stime': '2014/1/1',
+                                      'cali_etime': '2024/12/31',
+                                      'vali_stime': '2008/1/1',
+                                      'vali_etime': '2013/12/31'}
+                              }
+                  },
+        'RG659': {'gw_no3': {'day': {'ylabel': 'm',
+                                     'plot_style': 'dotline',
+                                     'cali_stime': '2014/1/1',
+                                     'cali_etime': '2024/12/31',
+                                     'vali_stime': '2008/1/1',
+                                     'vali_etime': '2013/12/31'}
+                             }
+                  },
+        'SO614': {'gw_no3': {'day': {'ylabel': 'm',
+                                     'plot_style': 'dotline',
+                                     'cali_stime': '2014/1/1',
+                                     'cali_etime': '2024/12/31',
+                                     'vali_stime': '2008/1/1',
+                                     'vali_etime': '2013/12/31'}
+                             }
+                  },
+        'UX025': {'gw_no3': {'day': {'ylabel': 'm',
+                                     'plot_style': 'dotline',
+                                     'cali_stime': '2008/1/1',
+                                     'cali_etime': '2024/12/31',
+                                     'vali_stime': '',
+                                     'vali_etime': ''}
+                             }
+                  },
+        'VA157': {'gw_no3': {'day': {'ylabel': 'm',
+                                     'plot_style': 'dotline',
+                                     'cali_stime': '2008/1/1',
+                                     'cali_etime': '2024/12/31',
+                                     'vali_stime': '',
+                                     'vali_etime': ''}
+                             }
+                  },
+        'ZS174': {'gw_no3': {'day': {'ylabel': 'm',
+                                     'plot_style': 'dotline',
+                                     'cali_stime': '2008/1/1',
+                                     'cali_etime': '2024/12/31',
+                                     'vali_stime': '',
+                                     'vali_etime': ''}
+                             }
+                  }
+    }
 
     # 运行评估流程
     evaluate_performance(conf, SIM_DATA_DIR, OBS_DATA_DIR, FIGURES_DIR, precip_file, plot_stime,

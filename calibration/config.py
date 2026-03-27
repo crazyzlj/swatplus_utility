@@ -48,16 +48,16 @@ MAX_PBIAS = 90
 WORST_VALUE = -99
 
 COMBINED_WEIGHTS = {
-    "NSE": 0.8,
-    "PBIAS": 0.2
+    "NSE": 0.85,
+    "PBIAS": 0.15
 }
 
 PENALTIES = {
-    "usgs04085427_flo_out_day_cali_NSE": 0.01,
-    "usgs04085427_flo_out_mon_cali_NSE": 0.01,
-    "363375_flo_out_mon_cali_NSE": 0.01,
-    "363313_flo_out_mon_cali_NSE": 0.01,
-    "10020782_flo_out_mon_cali_NSE": 0.01
+    "usgs04085427_flo_out_day_cali_NSE": 0.3,
+    "usgs04085427_flo_out_mon_cali_NSE": 0.7,
+    "363375_flo_out_mon_cali_NSE": 0.8,
+    "363313_flo_out_mon_cali_NSE": 0.5,
+    "10020782_flo_out_mon_cali_NSE": 0.7
 }
 
 WORKER_DAG_TEMPLATE = 'worker_jobs_gen_{}.dag'

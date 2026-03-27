@@ -148,6 +148,8 @@ if __name__ == "__main__":
         'down1': [31, 30, 32],
         'all': None}
 
+    sub_inputs['mid1down1'] = sub_inputs['mid1'] + sub_inputs['down1']
+
     run_and_save_aquifers_combinations(
             DEMO_DB_FILE,
             sub_inputs,

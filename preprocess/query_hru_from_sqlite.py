@@ -181,6 +181,8 @@ if __name__ == "__main__":
                            57, 58, 60, 61, 62, 63, 64, 65, 68, 83, 84, 85],
                   'down1': [31, 30, 32]}
 
+    sub_inputs['mid1down1'] = sub_inputs['mid1'] + sub_inputs['down1']
+
     lu_inputs = {
         'alllu': None,
         'dairy': ['dairy', 'dairy1t1', 'dairy1t2', 'dairy1t3', 'dairy2t1', 'dairy2t2', 'dairy2t3'],

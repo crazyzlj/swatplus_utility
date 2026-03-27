@@ -58,8 +58,6 @@ if __name__ == "__main__":
 
     gen_sim_dirname = f"{sim_dir_name}/gen_{current_gen}"
     gen_dir = base_dir / gen_sim_dirname
-    os.makedirs(gen_dir, exist_ok=True)
-
     if not os.path.exists(gen_dir):
         os.makedirs(gen_dir, exist_ok=True)
 
