@@ -1,0 +1,172 @@
+lum.dtl: newly added decision table-based land use management, the format is referred to lum.dtl. Created by Liang-Jun Zhu, 10/07/2025
+12
+
+name                     conds      alts      acts       !Continuous Hay, hay cutting (biomass harv) when plant heat units > 0.5 - soil is below 2*fc - and biomass is > 2500 kg/ha - max 4 cuttings per year
+pl_hv_conthay_6yrs           8         6         4  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1      alt2      alt3      alt4      alt5      alt6
+phu_base0                  hru         0              null                 -       0.15000         >         -         -         -         -         -       !base0 heat units to trigger plant
+phu_base0                  hru         0              null                 -       0.30000         -         >         -         -         -         -       !plant even if soil water is high
+soil_water                 hru         0                fc                 *       2.00000         <         -         <         <         -         -       !soil water < this value * field capacity
+phu_plant                  hru         0           phu_mat                 -       0.50000         -         -         >         >         -         -       !plant heat units > this value
+biomass                    hru         0              null                 -    2500.00000         -         -         >         >         -         -       !biomass > this value (kg/ha) 
+year_rot                   hru         0              null                 -       1.00000         =         =         -         -         -         -       !plant in the first year of the rotation
+year_rot                   hru         0              null                 -       6.00000         -         -         <         =         =         >       !hay cutting (biomass harv) in each year and then reset rotation after the 6th year
+jday                       hru         0              null                 -     350.00000         -         -         -         -         =         -       !make sure to kill hay in the 6th year     
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome
+plant                      hru         0         plant_hay              alfa       0.00000       1.00000              null  y   y   n   n   n   n             
+harvest                    hru         0          harv_hay              alfa       0.00000       4.00000       hay_cut_low  n   n   y   y   n   n   
+kill                       hru         0          kill_hay              alfa       0.00000       1.00000              null  n   n   n   n   y   n    
+rot_reset                  hru         0           reset_1              null       1.00000       1.00000              null  n   n   n   n   n   y    
+
+name                     conds      alts      acts       !Continuous Corn sequence, plant and harvest for continuous corn, plant before May 30 and harvest before Oct 31.
+pl_hv_contcorn               7         6         3  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1      alt2      alt3      alt4      alt5      alt6  
+phu_base0                  hru         0              null                 -       0.15000         >         -         -         -         -         -       !base0 heat units to trigger plant
+phu_base0                  hru         0              null                 -       0.30000         -         -         -         -         >         -       !plant even if soil water is high
+phu_plant                  hru         0           phu_mat                 -       1.15000         -         >         -         -         -         -       !plant heat units to trigger harvest
+soil_water                 hru         0                fc                 *       2.00000         <         <         -         -         -         -       !don't schedule if too wet
+jday                       hru         0              null                 -     150.00000         -         -         -         -         -         =       !plant even other factors are not qualified, May 30
+jday                       hru         0              null                 -     304.00000         -         -         =         -         -         -       !harvest day even if too wet, Oct 31
+year_rot                   hru         0              null                 -       1.00000         -         -         -         >         -         -       !reset rotation each year
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome           
+plant                      hru         0        plant_corn           corn120       0.00000       1.00000              null  y   n   n   n   y   y   
+harvest_kill               hru         0         harv_corn           corn120       0.00000       1.00000             grain  n   y   y   n   n   n   
+rot_reset                  hru         0           reset_1              null       1.00000       1.00000              null  n   n   n   y   n   n 
+
+name                     conds      alts      acts       !Cash grain (6-year-rotation of corn and soybean)
+pl_hv_cashgrain_6yrs         9        13         5  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1      alt2      alt3      alt4      alt5      alt6      alt7      alt8      alt9     alt10      alt11     alt12     alt13     
+phu_base0                  hru         0              null                 -       0.15000         >         >         >         -         -         -         >         >         >         -         -         -         -       !base0 heat units to trigger plant
+phu_plant                  hru         0           phu_mat                 -       1.15000         -         -         -         >         >         >         -         -         -         >         >         >         -       !plant heat units > this value to trigger harvest
+soil_water                 hru         0                fc                 *       2.00000         <         <         <         <         <         <         <         <         <         <         <         <         -       !soil water < this value * field capacity
+year_rot                   hru         0              null                 -       1.00000         =         -         -         =         -         -         -         -         -         -         -         -         -       !plant and harvest corn grain in the 1st year
+year_rot                   hru         0              null                 -       2.00000         -         -         -         -         -         -         =         -         -         =         -         -         -       !plant and harvest soybean in the 2nd year
+year_rot                   hru         0              null                 -       3.00000         -         =         -         -         =         -         -         -         -         -         -         -         -       !plant and harvest corn grain in the 3rd year
+year_rot                   hru         0              null                 -       4.00000         -         -         -         -         -         -         -         =         -         -         =         -         -       !plant and harvest soybean in the 4th year
+year_rot                   hru         0              null                 -       5.00000         -         -         =         -         -         =         -         -         -         -         -         -         -       !plant and harvest corn grain in the 5th year
+year_rot                   hru         0              null                 -       6.00000         -         -         -         -         -         -         -         -         =         -         -         =         >       !plant and harvest soybean in the 6th year and then reset rotation
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome
+plant                      hru         0        plant_corn           corn120       0.00000       1.00000              null  y   y   y   n   n   n   n   n   n   n   n   n   n
+harvest_kill               hru         0         harv_corn           corn120       0.00000       1.00000             grain  n   n   n   y   y   y   n   n   n   n   n   n   n
+plant                      hru         0        plant_soyb           soyb120       0.00000       1.00000              null  n   n   n   n   n   n   y   y   y   n   n   n   n            
+harvest_kill               hru         0         harv_soyb           soyb120       0.00000       1.00000             grain  n   n   n   n   n   n   n   n   n   y   y   y   n
+rot_reset                  hru         0           reset_1              null       1.00000       1.00000              null  n   n   n   n   n   n   n   n   n   n   n   n   y  
+
+name                     conds      alts      acts       !Dairy Sequence 1 (6-year-rotation of corn silage and alfalfa)
+pl_hv_dairy_csalf_6yrs      10         7         6  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1      alt2      alt3      alt4      alt5      alt6      alt7
+phu_base0                  hru         0              null                 -       0.15000         >         -         >         -         -         -         -       !base0 heat units to trigger plant
+phu_base0                  hru         0              null                 -       0.30000         -         -         -         >         -         -         -       !plant even if soil water is high
+phu_plant                  hru         0           phu_mat                 -       1.15000         -         >         -         -         -         -         -       !plant heat units > this value to trigger harvest
+soil_water                 hru         0                fc                 *       2.00000         <         <         <         -         <         -         -       !soil water < this value * field capacity
+phu_plant                  hru         0           phu_mat                 -       0.50000         -         -         -         -         >         -         -       !plant heat units > this value
+biomass                    hru         0              null                 -    2500.00000         -         -         -         -         >         -         -       !biomass > this value (kg/ha) 
+year_rot                   hru         0              null                 -       4.00000         <         <         =         =         -         -         -       !plant and harvest corn silage in the first three years, plant alfala in the 4th year
+year_rot                   hru         0              null                 -       3.00000         -         -         -         -         >         -         -       !harvest alfalfa in the latter three years
+year_rot                   hru         0              null                 -       6.00000         -         -         -         -         -         =         >       !harvest and kill alfalfa in the end of the 6th year and then reset rotation
+jday                       hru         0              null                 -     350.00000         -         -         -         -         -         =         -       !make sure to harvest and kill in the end of the 6th year     
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome
+plant                      hru         0        plant_csil           csil100       0.00000       1.00000              null  y   n   n   n   n   n   n 
+harvest_kill               hru         0         harv_csil           csil100       0.00000       1.00000            silage  n   y   n   n   n   n   n 
+plant                      hru         0         plant_hay              alfa       0.00000       1.00000              null  n   n   y   y   n   n   n 
+harvest                    hru         0          hay_harv              alfa       0.00000       4.00000       hay_cut_low  n   n   n   n   y   n   n 
+kill                       hru         0          hay_kill              alfa       0.00000       1.00000              null  n   n   n   n   n   y   n
+rot_reset                  hru         0           reset_1              null       1.00000       1.00000              null  n   n   n   n   n   n   y 
+
+name                     conds      alts      acts       !Dairy Sequence 2 (6-year-rotation of corn silage, corn grain, and alfalfa)
+pl_hv_dairy_cscgalf_6yrs    10         9         8  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1      alt2      alt3      alt4      alt5      alt6      alt7      alt8      alt9
+phu_base0                  hru         0              null                 -       0.15000         >         -         >         -         >         -         -         -         -       !base0 heat units to trigger plant
+phu_base0                  hru         0              null                 -       0.30000         -         -         -         -         -         >         -         -         -       !plant even if soil water is high
+phu_plant                  hru         0           phu_mat                 -       1.15000         -         >         -         >         -         -         -         -         -       !plant heat units > this value to trigger harvest
+soil_water                 hru         0                fc                 *       2.00000         <         <         <         <         <         -         -         -         -       !soil water < this value * field capacity
+phu_plant                  hru         0           phu_mat                 -       0.50000         -         -         -         -         -         -         >         -         -       !plant heat units > this value
+biomass                    hru         0              null                 -    2500.00000         -         -         -         -         -         -         >         -         -       !biomass > this value (kg/ha) 
+year_rot                   hru         0              null                 -       3.00000         <         <         =         =         -         -         >         -         -       !plant/harvest corn silage in the first two years, plant/harvest corn grain in the 3rd year, and harvest alfalfa in the latter three years.
+year_rot                   hru         0              null                 -       4.00000         -         -         -         -         =         =         -         -         -       !plant alfala in the 4th year.
+year_rot                   hru         0              null                 -       6.00000         -         -         -         -         -         -         -         =         >       !kill alfalfa in the end of the 6th year and then reset rotation
+jday                       hru         0              null                 -     350.00000         -         -         -         -         -         -         -         =         -       !make sure to harvest and kill in the end of the 6th year     
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome
+plant                      hru         0        plant_csil           csil100       0.00000       1.00000              null  y   n   n   n   n   n   n   n   n 
+harvest_kill               hru         0         harv_csil           csil100       0.00000       1.00000            silage  n   y   n   n   n   n   n   n   n
+plant                      hru         0        plant_corn           corn120       0.00000       1.00000              null  n   n   y   n   n   n   n   n   n 
+harvest_kill               hru         0         harv_corn           corn120       0.00000       1.00000             grain  n   n   n   y   n   n   n   n   n 
+plant                      hru         0         plant_hay              alfa       0.00000       1.00000              null  n   n   n   n   y   y   n   n   n 
+harvest                    hru         0          hay_harv              alfa       0.00000       4.00000       hay_cut_low  n   n   n   n   n   n   y   n   n 
+kill                       hru         0          hay_kill              alfa       0.00000       1.00000              null  n   n   n   n   n   n   n   y   n
+rot_reset                  hru         0           reset_1              null       1.00000       1.00000              null  n   n   n   n   n   n   n   n   y 
+
+name                     conds      alts      acts       !Tillage 1 for cash grain and continuous corn: Chisel plow after harvesting in fall, and twice field cultivator before planting in spring
+tillage_1                    3         3         3  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1      alt2      alt3  
+phu_base0                  hru         0              null                 -       0.10000         >         -         -       !first field cultivator often occurrs couple weeks before planting
+phu_base0                  hru         0              null                 -       0.14000         -         >         -       !second field cultivator occurrs couple days before or in the same day with planting
+days_harv                  hru         0              null                 -       5.00000         -         -         =       !days after harvest to chisel plow
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome           
+till                       hru         0     fieldcultivat           fldcult       0.00000       1.00000              null  y   n   n   
+till                       hru         0     fieldcultivat           fldcult       0.00000       1.00000              null  n   y   n   
+till                       hru         0       chisel_plow          chisplow       0.00000       1.00000              null  n   n   y   
+
+name                     conds      alts      acts       !Tillage 2 for cash grain and continuous corn: Disk plow after harvesting in fall, and field cultivator before planting in spring
+tillage_2                    2         2         2  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1      alt2  
+phu_base0                  hru         0              null                 -       0.12000         >         -       !disk plow just before planting if base0 heat units > this value
+days_harv                  hru         0              null                 -       5.00000         -         =       !days after harvest to chisel plow
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome           
+till                       hru         0     fieldcultivat           fldcult       0.00000       1.00000              null  y   n
+till                       hru         0       chisel_plow          chisplow       0.00000       1.00000              null  n   y   
+
+name                     conds      alts      acts       !Tillage 3 for cash grain and continuous corn: Vertical tillage before planting in spring and none tillage in fall
+tillage_3                    1         1         1  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1  
+phu_base0                  hru         0              null                 -       0.12000         >       !vertical tillage just before planting if base0 heat units > this value
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome           
+till                       hru         0     vertical_till      verticaltill       0.00000       1.00000              null  y
+
+name                     conds      alts      acts       !Tillage 4 for cash grain sequence ONLY: Chisel plow after harvesting in fall, and field cultivator before planting in spring
+tillage_4                    8        12         4  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1      alt2      alt3      alt4      alt5      alt6      alt7      alt8      alt9     alt10      alt11     alt12  
+phu_base0                  hru         0              null                 -       0.10000         >         >         >         -         -         -         >         >         >         -         -         -       !field cultivator often occurrs couple weeks before planting
+days_harv                  hru         0              null                 -       5.00000         -         -         -         =         =         =         -         -         -         =         =         =       !days after harvest to chisel plow
+year_rot                   hru         0              null                 -       1.00000         =         -         -         =         -         -         -         -         -         -         -         -       !plant in the 1st year
+year_rot                   hru         0              null                 -       2.00000         -         -         -         -         -         -         =         -         -         =         -         -       !hay cutting (biomass harv) in the 2nd year
+year_rot                   hru         0              null                 -       3.00000         -         =         -         -         =         -         -         -         -         -         -         -       !hay cutting (biomass harv) in the 3rd year
+year_rot                   hru         0              null                 -       4.00000         -         -         -         -         -         -         -         =         -         -         =         -       !hay cutting (biomass harv) in the 4th year
+year_rot                   hru         0              null                 -       5.00000         -         -         =         -         -         =         -         -         -         -         -         -       !hay cutting (biomass harv) in the 5th year
+year_rot                   hru         0              null                 -       6.00000         -         -         -         -         -         -         -         -         =         -         -         =       !hay cutting (biomass harv) in the 6th year and then reset rotation
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome           
+till                       hru         0     fieldcultivat           fldcult       0.00000       1.00000              null  y   y   y   n   n   n   n   n   n   n   n   n   
+till                       hru         0       chisel_plow          chisplow       0.00000       1.00000              null  n   n   n   y   y   y   n   n   n   n   n   n   
+till                       hru         0       notill_soyb          zerotill       0.00000       1.00000              null  n   n   n   n   n   n   y   y   y   n   n   n   
+till                       hru         0       notill_soyb          zerotill       0.00000       1.00000              null  n   n   n   n   n   n   n   n   n   y   y   y
+
+name                     conds      alts      acts       !Tillage 1: Chisel plow after harvesting in fall, and twice field cultivator before planting in spring
+tillage_1_dairys1s2          4         3         3  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1      alt2      alt3  
+phu_base0                  hru         0              null                 -       0.10000         >         -         -       !first field cultivator often occurrs couple weeks before planting
+phu_base0                  hru         0              null                 -       0.14000         -         >         -       !second field cultivator occurrs couple days before or in the same day with planting
+days_harv                  hru         0              null                 -       5.00000         -         -         =       !days after harvest to chisel plow
+year_rot                   hru         0              null                 -       4.00000         <         <         <       !only apply for rotation years 1, 2, and 3
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome           
+till                       hru         0     fieldcultivat           fldcult       0.00000       1.00000              null  y   n   n   
+till                       hru         0     fieldcultivat           fldcult       0.00000       1.00000              null  n   y   n   
+till                       hru         0       chisel_plow          chisplow       0.00000       1.00000              null  n   n   y   
+
+name                     conds      alts      acts       !Tillage 2: Disk plow after harvesting in fall, and field cultivator before planting in spring
+tillage_2_dairys1s2          3         2         2  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1      alt2  
+phu_base0                  hru         0              null                 -       0.12000         >         -       !disk plow just before planting if base0 heat units > this value
+days_harv                  hru         0              null                 -       5.00000         -         =       !days after harvest to chisel plow
+year_rot                   hru         0              null                 -       4.00000         <         <       !only apply for rotation years 1, 2, and 3
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome           
+till                       hru         0     fieldcultivat           fldcult       0.00000       1.00000              null  y   n
+till                       hru         0       chisel_plow          chisplow       0.00000       1.00000              null  n   y   
+
+name                     conds      alts      acts       !Tillage 3: Vertical tillage before planting in spring and none tillage in fall
+tillage_3_dairys1s2          2         1         1  
+var                        obj   obj_num           lim_var            lim_op     lim_const      alt1  
+phu_base0                  hru         0              null                 -       0.12000         >       !vertical tillage just before planting if base0 heat units > this value
+year_rot                   hru         0              null                 -       4.00000         <       !only apply for rotation years 1, 2, and 3
+act_typ                    obj   obj_num              name            option         const        const2                fp  outcome           
+till                       hru         0     vertical_till      verticaltill       0.00000       1.00000              null  y
+
