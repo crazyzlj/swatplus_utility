@@ -3,17 +3,17 @@
 
 universe   = vanilla
 executable = run_model_extract_results.sh
-arguments  = $(ParamFile) $(ResultDir)
+arguments  = $(SWATPlusVer) $(ParamFile) $(ResultDir)
 
-container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-0.2.1.sif
+container_image = osdf:///chtc/staging/lzhu267/swatplus_utility-20260413.sif
 
 preserve_relative_paths = true
 transfer_input_files = $(ParamFile),TxtInOut.tar.gz,observed.tar.gz,run_model_extract_results.sh,__init__.py,singlerun,postprocess,utils
 transfer_output_files = $(ResultDir)
 
 request_cpus   = 1
-request_memory = 1 GB
-request_disk   = 6 GB
+request_memory = 8 GB
+request_disk   = 40 GB
 
 log = $(ResultDir)/job.log
 output = $(ResultDir)/job.out

@@ -99,9 +99,9 @@ import os
 import re
 
 # --- 配置 ---
-DB_FILE = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv4\swatplus_datasets.sqlite"
-# DB_FILE = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv4\manitowoc_test30mv4.sqlite"
-DTL_FILE = r"D:\data_m\manitowoc\landcover\landusemanagement(LUM)\new_lum.2025-10-08v2.dtl"
+DB_FILE = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv5\swatplus_datasets.sqlite"
+# DB_FILE = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv5\manitowoc_test30mv5.sqlite"
+DTL_FILE = r"D:\data_m\manitowoc\landcover\landusemanagement(LUM)\new_lum.2025-11-06.dtl"
 
 
 def create_tables(cursor):

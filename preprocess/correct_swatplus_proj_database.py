@@ -18,9 +18,9 @@ import os
 
 # --- 配置 ---
 # 基础数据库 (源)
-BASE_DB_PATH = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\swatplus_datasets.sqlite'
+BASE_DB_PATH = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv5\swatplus_datasets.sqlite'
 # 工程数据库 (目标)
-PROJ_DB_PATH = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\manitowoc_test30mv4.sqlite'
+PROJ_DB_PATH = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv5\manitowoc_test30mv5.sqlite'
 
 
 def sync_plant_community_data(base_conn, proj_conn):

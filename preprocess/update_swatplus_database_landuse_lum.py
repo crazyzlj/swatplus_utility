@@ -98,9 +98,9 @@ import pandas as pd
 import os
 
 
-DB_FILE_PATH = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\swatplus_datasets.sqlite'
-# DB_FILE_PATH = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv4\manitowoc_test30mv4.sqlite"
-CSV_FILE_PATH = r'D:\data_m\manitowoc\landcover\landusemanagement(LUM)\new_landuse.lum.csv'
+DB_FILE_PATH = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv5\swatplus_datasets.sqlite'
+# DB_FILE_PATH = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv5\manitowoc_test30mv5.sqlite"
+CSV_FILE_PATH = r'D:\data_m\manitowoc\landcover\landusemanagement(LUM)\new_landuse.lum-0421.csv'
 
 # 定义CSV列名与数据库表和ID列的映射关系
 # 格式: 'csv_column_name': {'table': 'db_table_name', 'id_col': 'foreign_key_id_col_in_landuse_lum'}
@@ -213,6 +213,9 @@ def update_landuse_from_csv(csv_path, db_path):
                     value_name = row[csv_col]
                     table_name = db_info['table']
                     id_col_name = db_info['id_col']
+
+                    if value_name == '' or value_name is None:
+                        continue
 
                     print(f"  - 正在查询 '{value_name}' 在表 '{table_name}' 中的 ID...")
                     found_id = get_id_by_name(cursor, table_name, value_name)

@@ -13,18 +13,37 @@
 #   #  PowerShell (Windows)
 #   > docker build -t "crazyzlj/swatplus_utility:$(Get-Content VERSION)-debian-$(Get-Content VERSION_SWATPLUS)" --build-arg "SWATPLUSVER=$(Get-Content VERSION_SWATPLUS)" -f docker/Dockerfile.minimamba .
 #
-# Copyright 2025 Liang-Jun Zhu <zlj@lreis.ac.cn>
+# Copyright 2025-2026 Liang-Jun Zhu <zlj@lreis.ac.cn>
 
 # ----------------------------------------------------------------
 # Stage 1: SWAT+ image with user-specific version
 # ----------------------------------------------------------------
 ARG SWATPLUSVER
+ARG SWATPLUSVER2=alpine
 FROM crazyzlj/swatplus:debian-${SWATPLUSVER} AS swat_builder
 # we only copy SWAT+ executable from this image, so left blank here.
 
+# (Optional) Another swatplus image
+FROM crazyzlj/swatplus:debian-${SWATPLUSVER2} AS swat_builder_2
+ONBUILD RUN echo "Optional SWATPLUSVER2 included"
 
 # ----------------------------------------------------------------
-# Stage 2: Final environment: Mamba + Python + SWAT+
+# Stage 2: Collect all available SWAT+ executable
+# ----------------------------------------------------------------
+FROM alpine AS collector
+RUN mkdir -p /swat_bins
+
+# Copy from the first required image
+COPY --from=swat_builder /usr/local/bin/swatplus-* /swat_bins/
+
+# Try to copy from the second optional iamge
+RUN --mount=from=swat_builder_2,target=/src \
+    if [ -d /src/usr/local/bin ]; then \
+        cp /src/usr/local/bin/swatplus-* /swat_bins/ 2>/dev/null || true; \
+    fi
+
+# ----------------------------------------------------------------
+# Stage 3: Final environment: Mamba + Python + SWAT+
 # ----------------------------------------------------------------
 FROM mambaorg/micromamba:2.3.2-debian12-slim AS runner
 
@@ -41,7 +60,7 @@ COPY --chown=$MAMBA_USER:$MAMBA_USER ./postprocess/ /app/postprocess/
 COPY --chown=$MAMBA_USER:$MAMBA_USER ./test_chtc/ /app/test_chtc/
 
 # Copy SWAT+ executable files from "Stage 1: swat_builder"
-COPY --from=swat_builder --chown=$MAMBA_USER:$MAMBA_USER /usr/local/bin/swatplus-* /app/
+COPY --from=collector --chown=$MAMBA_USER:$MAMBA_USER /swat_bins/ /app/
 RUN chmod +x /app/swatplus-*
 
 # Activate Conda environment
@@ -51,5 +70,5 @@ ENV PATH=/opt/conda/envs/pyswatplus_util/bin:$PATH
 
 # run swatplus compiled by Intel, by default
 ARG SWATPLUSVER
-ENV SWATPLUSEXEC="/app/swatplus-${SWATPLUSVER}-ifx-lin_x86_64-Rel"
+ENV SWATPLUSEXEC="/app/swatplus-${SWATPLUSVER}-ifx-lin_x86_64-Rel-o1"
 CMD ["/bin/sh", "-c", "exec ${SWATPLUSEXEC}"]

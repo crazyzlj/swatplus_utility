@@ -2,6 +2,8 @@ import pandas as pd
 import os
 import sys
 
+from postprocess.config import *
+
 
 def parse_swat_records(input_file_path: str, skip_rows: int = 9):
     """
@@ -107,14 +109,7 @@ def process_swat_file(
     return True
 
 
-if __name__ == '__main__':
-    # 1. SWAT+输出文件所在的文件夹
-    # 假设您的 basin_wb_day.txt 或 channel_sd_day.txt 在这个文件夹里
-    txtinout_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\TxtInOut'
-    INPUT_FILE = txtinout_dir + os.sep + 'channel_sd_day.txt'
-    CHANNEL_NUMBER = 68
-    output_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4\Scenarios\Default\Results\OutletsResults'
-
+def read_basin_precipitation(txtinout_dir, outchannel, output_dir):
     basin_wb_file = os.path.join(txtinout_dir, 'basin_wb_day.txt')
     channel_sd_file = os.path.join(txtinout_dir, 'channel_sd_day.txt')
 
@@ -168,10 +163,14 @@ if __name__ == '__main__':
                 target_column='precip',
                 output_filename='precip.csv',
                 skip_rows=channel_skip_rows,
-                filter_by_name=f"cha{str(CHANNEL_NUMBER).zfill(3)}",
+                filter_by_name=f"cha{str(outchannel).zfill(3)}",
                 perform_unit_conversion=True
         )
     else:
         print("错误: 未在指定目录下找到 basin_wb_day.txt 或 channel_sd_day.txt。")
 
+if __name__ == '__main__':
+    txtinout_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv5\Scenarios\Default\TxtInOut-0517-all-2'
+    out_dir = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv5\Scenarios\Default\TxtInOut-0517-all-2\OutletsResults'
+    read_basin_precipitation(txtinout_dir, CHANNEL_NUMBER, out_dir)
 

@@ -3,9 +3,10 @@ import csv
 import os
 
 # --- Configuration ---
-wp = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv4'
+wp = r'D:\data_m\manitowoc_test30m\manitowoc_test30mv5'
 db_path = wp + os.sep + 'swatplus_datasets.sqlite'
-csv_path = r'D:\data_m\manitowoc\landcover\landusemanagement(LUM)\new_landuse_lookup_manitowoc.csv'
+# db_path = wp + os.sep + 'manitowoc_test30mv5.sqlite'
+csv_path = r'D:\data_m\manitowoc\landcover\landusemanagement(LUM)\new_landuse_lookup_manitowoc-0421.csv'
 # ---------------------
 
 # Column lists from the database schema

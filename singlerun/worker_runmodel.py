@@ -9,9 +9,12 @@ import time
 import pathlib
 import logging
 
-from postprocess.read_channel_sd_output import process_swat_output_memory_efficient
+from postprocess.config import *
+from postprocess.read_basin_precip import read_basin_precipitation
+from postprocess.read_channel_sd_output import read_channel_daily_monthly_outputs
+from postprocess.read_gwflow_output import read_gwflow_outputs
 from postprocess.eval_model_performance_v2 import evaluate_performance
-
+import numpy.typing
 import pySWATPlus
 
 
@@ -73,58 +76,12 @@ if __name__ == '__main__':
     if results_dir is None:
         results_dir = script_dir + '/../TxtInOut/OutletsResults'
 
-    CHANNEL_NUMBER = [68]
-    SUFFIX = ['_usgs04085427']
-
-    CHANNEL_NUMBERS = [68, 170, 157, 74]
-    SUFFIXES = ['_usgs04085427', '_363375', '_10020782', '_363313']
-
-    # Configuration for calculating model performances
-    plot_stime = '2008/1/1'
-    plot_etime = '2024/12/31'
-    plot_flag = False
-    # For flow only
-    conf = {'usgs04085427': {'flo_out': {'day': {'ylabel': 'Q(m^3/s)',
-                                                 'plot_style': 'dotline',
-                                                 'cali_stime': '2014/1/1',
-                                                 'cali_etime': '2024/12/31',
-                                                 'vali_stime': '2008/1/1',
-                                                 'vali_etime': '2013/12/31'},
-                                         'mon': {'ylabel': 'Q(m^3/s)',
-                                                 'plot_style': 'dotline',
-                                                 'cali_stime': '2014/1',
-                                                 'cali_etime': '2024/12',
-                                                 'vali_stime': '2008/1',
-                                                 'vali_etime': '2013/12'}}
-                             },
-            '363375': {'flo_out': {'mon': {'ylabel': 'Q (m^3/s)',
-                                           'plot_style': 'dotline',
-                                           'cali_stime': '2017/7',
-                                           'cali_etime': '2019/5',
-                                           'vali_stime': '',
-                                           'vali_etime': ''}}
-                       },
-            '10020782': {'flo_out': {'mon': {'ylabel': 'Q (m^3/s)',
-                                             'plot_style': 'dotline',
-                                             'cali_stime': '2017/7',
-                                             'cali_etime': '2019/10',
-                                             'vali_stime': '',
-                                             'vali_etime': ''}}
-                         },
-            '363313': {'flo_out': {'mon': {'ylabel': 'Q (m^3/s)',
-                                           'plot_style': 'dotline',
-                                           'cali_stime': '2017/7',
-                                           'cali_etime': '2019/10',
-                                           'vali_stime': '',
-                                           'vali_etime': ''}}
-                       }
-            }
-
     # Start time
     start_time = time.time()
     tio_dir = pathlib.Path(tio_dir).resolve()
     obs_dir = pathlib.Path(obs_dir).resolve()
-    cal_file = pathlib.Path(cal_file).resolve()
+    if cal_file is not None:
+        cal_file = pathlib.Path(cal_file).resolve()
     results_dir = pathlib.Path(results_dir).resolve()
     os.makedirs(results_dir, exist_ok=True)
 
@@ -147,11 +104,12 @@ if __name__ == '__main__':
 
     # Run SWAT+ model and calculate model performances
 
-    # Remove and rename sim_<i>.cal to cpu_path/calibration.cal
+    # Only when new cal_file is specified, remove and rename sim_<i>.cal to cpu_path/calibration.cal
     cal_file_act = tio_dir / 'calibration.cal'
-    if os.path.exists(cal_file_act):
-        os.remove(cal_file_act)
-    shutil.move(cal_file, cal_file_act)
+    if cal_file is not None:
+        if os.path.exists(cal_file_act):
+            os.remove(cal_file_act)
+        shutil.move(cal_file, cal_file_act)
 
     # Run SWAT+ model in each directory
     txtinout_reader.run_swat(
@@ -161,31 +119,25 @@ if __name__ == '__main__':
         warmup=6
     )
     # Extract interested simulation results to the result folder
-    INPUT_FILE = tio_dir / 'channel_sd_day.txt'
-    MON_INPUT_FILE = tio_dir / 'channel_sd_mon.txt'
-    CHANNEL_NUMBER = [68]
-    SUFFIX = ['_usgs04085427']
+    # 1. Read precipitation
+    read_basin_precipitation(tio_dir, CHANNEL_NUMBER, results_dir)
 
-    CHANNEL_NUMBERS = [68, 170, 157, 74]
-    SUFFIXES = ['_usgs04085427', '_363375', '_10020782', '_363313']
+    # 2. Read daily and monthly channel outputs
+    read_channel_daily_monthly_outputs(tio_dir, results_dir, CHANNEL_NUMBER, SUFFIX,
+                                       CHANNEL_NUMBERS, SUFFIXES)
 
-    process_swat_output_memory_efficient(
-            input_file_path=INPUT_FILE, skiplines=3,
-            channel_id=CHANNEL_NUMBER,
-            output_folder=results_dir,
-            fname_suffix=SUFFIX
-    )
+    # 3. Read groundwater head and solute outputs
+    read_gwflow_outputs(tio_dir, results_dir, GRID_IDS, WELL_IDS)
 
-    process_swat_output_memory_efficient(
-            input_file_path=MON_INPUT_FILE, skiplines=3,
-            channel_id=CHANNEL_NUMBERS,
-            output_folder=results_dir,
-            fname_suffix=SUFFIXES, is_daily=False
-    )
+    # 4. Calculate model performance metrics
+    evaluate_performance(CONF, results_dir, obs_dir, results_dir, PLOT_STIME,
+                         PLOT_ETIME, plot_flag=False)
 
-    # Calculate model performance indices
-    evaluate_performance(conf, results_dir, obs_dir, results_dir, '',
-                         plot_stime, plot_etime, plot_flag=plot_flag)
+    copy_files = ['basin_pw_day.txt', 'basin_wb_day.txt']
+    for cpfile in copy_files:
+        abs_file = tio_dir / cpfile
+        if os.path.exists(abs_file):
+            shutil.copy2(abs_file, results_dir)
 
     # delete the extracted simulation data in csv format
     delete_files_by_suffix_glob(results_dir, '.csv', True)

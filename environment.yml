@@ -11,7 +11,7 @@ channels:
 dependencies:
   - python=3.10
   - matplotlib
-  - numpy
+  - numpy<2.0.0
   - pandas
   #- htcondor
   - git

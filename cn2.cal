@@ -1,0 +1,4 @@
+calibration.cal
+ 1
+NAME	CHG_TYPE	         VAL  CONDS	   LYR1	   LYR2	  YEAR1 YEAR2	DAY1  DAY2	OBJ_TOT
+cn2	      pctchg	        20.0      0	      0       0	      0     0	   0	 0	      0

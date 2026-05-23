@@ -136,7 +136,7 @@ def view_data(db_file, tbl_name):
 
 # --- 主程序入口 ---
 if __name__ == "__main__":
-    db_file = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv4\swatplus_datasets.sqlite"
+    db_file = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv5\swatplus_datasets.sqlite"
     tbl_name = "tillage_til"
     csv_file = r"D:\data_m\manitowoc\landcover\landusemanagement(LUM)\new_tillage.til.csv"
 

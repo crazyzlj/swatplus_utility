@@ -48,9 +48,9 @@ import csv
 import os
 
 # --- 配置 ---
-# DB_FILE = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv4\swatplus_datasets.sqlite"
-DB_FILE = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv4\manitowoc_test30mv4.sqlite"
-CSV_FILE = r"D:\data_m\manitowoc\landcover\landusemanagement(LUM)\new_management.sch.csv"
+# DB_FILE = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv5\swatplus_datasets.sqlite"
+DB_FILE = r"D:\data_m\manitowoc_test30m\manitowoc_test30mv5\manitowoc_test30mv5.sqlite"
+CSV_FILE = r"D:\data_m\manitowoc\landcover\landusemanagement(LUM)\new_management.sch-0421.csv"
 
 
 def create_tables(cursor):
